@@ -16,4 +16,8 @@ public class Log {
             exp.printStackTrace();
         }
     }
+
+    public static void d(String e){
+        System.out.println(e);
+    }
 }

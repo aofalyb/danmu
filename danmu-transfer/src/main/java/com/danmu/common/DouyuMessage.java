@@ -1,5 +1,6 @@
 package com.danmu.common;
 
+import com.danmu.api.Connection;
 import com.danmu.protocol.DouyuPacket;
 import com.danmu.protocol.Packet;
 
@@ -21,47 +22,12 @@ public class DouyuMessage extends BaseMessage {
 
     protected Map<String,String> attributes = new HashMap();
 
-    public DouyuMessage(Packet packet, SocketChannel channel) {
-        super(packet, channel);
+    public DouyuMessage(Packet packet, Connection connection) {
+        super(packet, connection);
     }
-
-
-    public Message decode() {
-
-
-        byte[] douyuPacketBody = douyuPacket.getBody();
-
-        if(douyuPacketBody != null){
-            attributes = DouyuSerializeUtil.unSerialize2(new String(douyuPacketBody));
-        }
-
-        return this;
-    }
-
-    public ByteBuffer encode() {
-
-        ByteBuffer buffer = ByteBuffer.allocate(douyuPacket.getLength() + 4).order(ByteOrder.LITTLE_ENDIAN);
-
-        buffer.putInt(douyuPacket.getLength());
-        buffer.putInt(douyuPacket.getLength());
-
-        buffer.putShort(DouyuPacket.PACKET_TYPE_TO_SERVER);
-        buffer.put(douyuPacket.getEncrypt());
-        buffer.put(douyuPacket.getReserved());
-
-        buffer.put(douyuPacket.getBody());
-        buffer.put(douyuPacket.getEnding());
-        buffer.flip();
-
-        return buffer;
-    }
-
 
     public Map getAttributes() {
-        return attributes;
+        return douyuPacket.decode();
     }
 
-    private void setAttributes(Map attributes) {
-        this.attributes = attributes;
-    }
 }

@@ -11,76 +11,13 @@ import java.util.*;
  */
 public class DouyuSerializeUtil {
 
-    static String test = "type@=chatmsg/rid@=4809/uid@=5929359/nn@=我是追逐着你的眼眸丶/txt@=要飞机要飞机要飞机要飞机要飞机要飞机/cid@=5bc79afc372b40e0a7802b0000000000/ic@=avatar@Sface@S201603@S43d0121280c8f60b78254733415389b8/level@=15/sahf@=0/cst@=1521422363803/bnn@=大饼干/bl@=3/brid@=4809/hc@=9c31e4faff463b256601a0dfffed267d/el@=/lk@=/";
 
     public static String serialize(Map kvs) {
 
         return null;
     }
 
-
     public static Map unSerialize(String serializedString){
-
-
-        Map attrs = new HashMap();
-
-        StringBuffer buffer = new StringBuffer();
-
-        String[] strings = serializedString.split("@=");
-
-        String thisVk = null;
-
-        String nextVk = null;
-
-        buffer.append("{");
-        for (int i = 0; i < strings.length; i++) {
-
-            if(strings[i].startsWith("/")){
-                continue;
-            }
-
-            String[] split = strings[i].split("/");
-
-            for (int j = 0; j < split.length; j++) {
-                buffer.append("\""+split[j]+"\"");
-
-                if(j != split.length - 1){
-
-                    buffer.append(",");
-                }
-
-            }
-
-            if(i != strings.length - 1){
-                buffer.append(":");
-            }
-        }
-        String s = buffer.toString();
-        if(s.endsWith(":")){
-            s +="\"\"}";
-        }else {
-            s +="}";
-        }
-
-        Map parse = null;
-        try {
-            parse = (Map) JSON.parse(s);
-        } catch (Exception e) {
-            parse = new HashMap();
-        }
-
-
-        return parse;
-    }
-
-    public static void main(String[] args) {
-
-
-        unSerialize2(test);
-    }
-
-
-    public static Map unSerialize2(String serializedString){
 
 
         Map attrs = new HashMap();

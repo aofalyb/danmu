@@ -1,5 +1,6 @@
 package com.danmu.common;
 
+import com.danmu.api.Connection;
 import com.danmu.protocol.Packet;
 
 import java.io.IOException;
@@ -15,42 +16,25 @@ public abstract class BaseMessage implements Message{
 
     protected Packet packet;
 
-    private SocketChannel channel;
+    private Connection connection;
 
-    public BaseMessage(Packet packet, SocketChannel channel) {
+    public BaseMessage(Packet packet, Connection connection) {
         this.packet = packet;
-        this.channel = channel;
+        this.connection = connection;
     }
 
 
     public void send(OnMessageSendListener onMessageSendListener) {
 
-        ByteBuffer buffer = encode();
-
-        if(channel.isConnected()){
-
-            int remaining = buffer.remaining();
-
-            try {
-                int writedLength = channel.write(buffer);
-
-                if(remaining == writedLength){
-                    onMessageSendListener.onSuccess();
-                    return;
-                }
-
-                onMessageSendListener.onError();
-
-            } catch (Exception e) {
-                onMessageSendListener.onError();
-                Log.e(null,e);
-                try {
-                    channel.close();
-                } catch (IOException e1) {
-                    Log.e("client close...",e1);
-                }
+        //ByteBuffer buffer = encode();
+        ;
+        if(connection.isValid()){
+            if(connection.send(packet.encode(),onMessageSendListener)){
+                connection.refreshWrite();
             }
+        }else {
+            Log.d("send on error,maybe c-s timeout...");
+            connection.shutDown();
         }
-
     }
 }

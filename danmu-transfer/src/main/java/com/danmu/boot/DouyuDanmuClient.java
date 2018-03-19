@@ -1,14 +1,12 @@
 package com.danmu.boot;
 
-import com.alibaba.fastjson.JSON;
+import com.danmu.api.Connection;
 import com.danmu.codec.DouyuPacketDecoder;
 import com.danmu.common.*;
 import com.danmu.protocol.DouyuPacket;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -29,16 +27,16 @@ public class DouyuDanmuClient {
 
     static SocketChannel channel = null;
 
+    static Connection connection;
+
     static final String ROOM_ID = "4809";
 
     public static void main(String[] args){
         try {
             Selector selector = Selector.open();
              channel = SocketChannel.open();
-            // 设置为非阻塞模式，这个方法必须在实际连接之前调用(所以open的时候不能提供服务器地址，否则会自动连接)
             channel.configureBlocking(false);
             channel.connect(new InetSocketAddress("openbarrage.douyutv.com",8601));
-            //channel.connect(new InetSocketAddress("192.168.1.229",6378));
             channel.register(selector, SelectionKey.OP_CONNECT);
 
             selector.select();
@@ -74,7 +72,10 @@ public class DouyuDanmuClient {
 
         if(key.isConnectable()){
             if(channel.isConnectionPending()){
-                System.out.println("成功连接服务端："+channel.getRemoteAddress());
+                System.out.println("connected server："+channel.getRemoteAddress());
+
+                connection = new Connection(channel,ROOM_ID);
+
                 channel.finishConnect();
                 doLogin();
 
@@ -87,11 +88,12 @@ public class DouyuDanmuClient {
     //发送登录认证消息 78561
     private static void doLogin() {
 
-        DouyuMessage douyuLoginMessage = new DouyuMessage(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_LOGIN,ROOM_ID),channel);
+        DouyuMessage douyuLoginMessage = new DouyuMessage(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_LOGIN,ROOM_ID),connection);
 
         douyuLoginMessage.send(new OnMessageSendListener() {
             public void onSuccess() {
                 System.out.println("try login...");
+                connection.refreshWrite();
             }
 
             public void onError() {
@@ -115,20 +117,15 @@ public class DouyuDanmuClient {
                 return;
             }
 
-            DouyuMessage douyuMessage = new DouyuMessage(douyuPacket,channel);
-            try {
-                douyuMessage.decode();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
 
-            Map<String,String> attributes = douyuMessage.getAttributes();
+
+            Map<String,String> attributes = douyuPacket.decode();
 
             String type = attributes.get("type");
 
             if("loginres".equals(type)){
                 System.out.println("login success...");
-                DouyuMessage joingroupMessage = new DouyuMessage(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_JOINGROUP,ROOM_ID),channel);
+                DouyuMessage joingroupMessage = new DouyuMessage(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_JOINGROUP,ROOM_ID),connection);
 
                 joingroupMessage.send(new OnMessageSendListener() {
                     public void onSuccess() {
@@ -150,20 +147,8 @@ public class DouyuDanmuClient {
                 System.out.println("###"+attributes.get("nn")+"赠送了礼物gfid#["+attributes.get("gfid")+"]"+"###");
             }
 
-
         }
-
 
     }
 
-    private  void doWrite(SocketChannel sc,String data) throws IOException{
-        byte[] req =data.getBytes();
-        ByteBuffer byteBuffer = ByteBuffer.allocate(req.length);
-        byteBuffer.put(req);
-        byteBuffer.flip();
-        sc.write(byteBuffer);
-        if(!byteBuffer.hasRemaining()){
-            System.out.println("Send 2 client successed");
-        }
-    }
 }

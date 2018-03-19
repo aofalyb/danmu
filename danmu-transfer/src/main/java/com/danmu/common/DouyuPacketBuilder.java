@@ -29,6 +29,14 @@ public class DouyuPacketBuilder {
             return packet;
         }
 
+        if(cmd == DouyuPacket.PACKET_TYPE_HEARTBEAT){
+
+            String loginWrap = "type@=mrkl/";
+            Packet packet = new DouyuPacket(loginWrap);
+
+            return packet;
+        }
+
         return null;
     }
 }

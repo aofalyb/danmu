@@ -10,11 +10,6 @@ import java.nio.ByteBuffer;
 public interface Message {
 
 
-    Message decode();
-
-
-    ByteBuffer encode();
-
 
     void send(OnMessageSendListener onMessageSendListener);
 
