@@ -33,7 +33,7 @@ public abstract class BaseMessage implements Message{
                 connection.refreshWrite();
             }
         }else {
-            Log.d("send on error,maybe c-s timeout...");
+            Log.d("send on error,maybe connect server timeout...");
             connection.shutDown();
         }
     }

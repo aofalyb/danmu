@@ -72,7 +72,7 @@ public class DouyuDanmuClient {
 
         if(key.isConnectable()){
             if(channel.isConnectionPending()){
-                System.out.println("connected server："+channel.getRemoteAddress());
+                Log.d("connected server："+channel.getRemoteAddress());
 
                 connection = new Connection(channel,ROOM_ID);
 
@@ -92,7 +92,7 @@ public class DouyuDanmuClient {
 
         douyuLoginMessage.send(new OnMessageSendListener() {
             public void onSuccess() {
-                System.out.println("try login...");
+                Log.d("try login...");
                 connection.refreshWrite();
             }
 
@@ -113,7 +113,7 @@ public class DouyuDanmuClient {
             DouyuPacket douyuPacket = DouyuPacketDecoder.decode(channel);
 
             if(douyuPacket == null){
-                System.out.println();
+                Log.d("-");
                 return;
             }
 
@@ -124,27 +124,27 @@ public class DouyuDanmuClient {
             String type = attributes.get("type");
 
             if("loginres".equals(type)){
-                System.out.println("login success...");
+                Log.d("login success...");
                 DouyuMessage joingroupMessage = new DouyuMessage(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_JOINGROUP,ROOM_ID),connection);
 
                 joingroupMessage.send(new OnMessageSendListener() {
                     public void onSuccess() {
-                        System.out.println("join a group success...");
-                        System.out.println("waif for danmu...");
+                        Log.d("join a group success...");
+                        Log.d("waif for danmu...");
                     }
 
                     public void onError() {
-                        System.out.println("join group error...");
+                        Log.d("join group error...");
                     }
                 });
             }
 
             if("chatmsg".equals(type)){
-                System.out.println(attributes.get("nn")+":"+attributes.get("txt"));
+                Log.d(attributes.get("nn")+":"+attributes.get("txt"));
             }
 
             if("dgb".equals(type)){
-                System.out.println("###"+attributes.get("nn")+"赠送了礼物gfid#["+attributes.get("gfid")+"]"+"###");
+                Log.d("###"+attributes.get("nn")+"赠送了礼物gfid#["+attributes.get("gfid")+"]"+"###");
             }
 
         }
