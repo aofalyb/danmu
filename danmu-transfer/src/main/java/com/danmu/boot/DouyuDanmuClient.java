@@ -1,10 +1,8 @@
 package com.danmu.boot;
 
+import com.alibaba.fastjson.JSON;
 import com.danmu.codec.DouyuPacketDecoder;
-import com.danmu.common.DouyuJoingroupMessage;
-import com.danmu.common.DouyuLoginMessage;
-import com.danmu.common.DouyuPacketBuilder;
-import com.danmu.common.OnMessageSendListener;
+import com.danmu.common.*;
 import com.danmu.protocol.DouyuPacket;
 
 import java.io.IOException;
@@ -15,6 +13,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -29,6 +28,8 @@ public class DouyuDanmuClient {
     static Selector selector = null;
 
     static SocketChannel channel = null;
+
+    static final String ROOM_ID = "4809";
 
     public static void main(String[] args){
         try {
@@ -86,12 +87,11 @@ public class DouyuDanmuClient {
     //发送登录认证消息 78561
     private static void doLogin() {
 
-        DouyuLoginMessage douyuLoginMessage = new DouyuLoginMessage(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_LOGIN,"61372"),channel);
+        DouyuMessage douyuLoginMessage = new DouyuMessage(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_LOGIN,ROOM_ID),channel);
 
-        douyuLoginMessage.encode();
         douyuLoginMessage.send(new OnMessageSendListener() {
             public void onSuccess() {
-                System.out.println("login success...");
+                System.out.println("try login...");
             }
 
             public void onError() {
@@ -101,7 +101,6 @@ public class DouyuDanmuClient {
 
     }
 
-    private static boolean isFristConnect = false;
 
     private static void handleMessage(SelectionKey key) throws IOException{
 
@@ -109,17 +108,32 @@ public class DouyuDanmuClient {
 
             SocketChannel channel  = (SocketChannel) key.channel();
 
-            DouyuPacket decode = DouyuPacketDecoder.decode(channel);
+            DouyuPacket douyuPacket = DouyuPacketDecoder.decode(channel);
 
+            if(douyuPacket == null){
+                System.out.println();
+                return;
+            }
 
-            if(!isFristConnect){
-                DouyuJoingroupMessage joingroupMessage = new DouyuJoingroupMessage(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_JOINGROUP,"61372"),channel);
+            DouyuMessage douyuMessage = new DouyuMessage(douyuPacket,channel);
+            try {
+                douyuMessage.decode();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
-                joingroupMessage.encode();
+            Map<String,String> attributes = douyuMessage.getAttributes();
+
+            String type = attributes.get("type");
+
+            if("loginres".equals(type)){
+                System.out.println("login success...");
+                DouyuMessage joingroupMessage = new DouyuMessage(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_JOINGROUP,ROOM_ID),channel);
+
                 joingroupMessage.send(new OnMessageSendListener() {
                     public void onSuccess() {
-                        System.out.println("join group success...");
-                        isFristConnect = true;
+                        System.out.println("join a group success...");
+                        System.out.println("waif for danmu...");
                     }
 
                     public void onError() {
@@ -128,7 +142,13 @@ public class DouyuDanmuClient {
                 });
             }
 
+            if("chatmsg".equals(type)){
+                System.out.println(attributes.get("nn")+":"+attributes.get("txt"));
+            }
 
+            if("dgb".equals(type)){
+                System.out.println("###"+attributes.get("nn")+"赠送了礼物gfid#["+attributes.get("gfid")+"]"+"###");
+            }
 
 
         }
