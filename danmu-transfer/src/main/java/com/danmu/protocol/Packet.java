@@ -1,26 +1,18 @@
 package com.danmu.protocol;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Map;
+import java.nio.channels.SocketChannel;
 
 /**
  * @author liyang
  * @description:
  * @date 2018/3/16
  */
-public abstract class Packet {
+public interface  Packet {
 
-    //序列化部分
-    private String content;
 
-    public Packet() {
-    }
+     ByteBuffer encode();
 
-    public Packet(String content) {
-        this.content = content;
-    }
-
-    abstract public ByteBuffer encode();
-
-    abstract public Map decode();
+     void decode(SocketChannel socketChannel) throws IOException;
 }

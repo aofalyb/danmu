@@ -18,16 +18,25 @@ import java.util.Map;
 public class DouyuMessage extends BaseMessage {
 
 
-    private DouyuPacket douyuPacket = (DouyuPacket) packet;
 
-    protected Map<String,String> attributes = new HashMap();
+    private Map<String,String> attributes = new HashMap();
 
-    public DouyuMessage(Packet packet, Connection connection) {
+    public DouyuMessage(DouyuPacket packet, Connection connection) {
         super(packet, connection);
     }
 
-    public Map getAttributes() {
-        return douyuPacket.decode();
+
+    @Override
+    public void decode() {
+
+        byte[] douyuPacketBody = ((DouyuPacket) packet).getBody();
+
+        if(douyuPacketBody != null){
+            attributes = DouyuSerializeUtil.unSerialize(new String(douyuPacketBody));
+        }
     }
 
+    public Map<String, String> getAttributes() {
+        return attributes;
+    }
 }

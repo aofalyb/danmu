@@ -29,7 +29,7 @@ public class DouyuDanmuClient {
 
     static Connection connection;
 
-    static final String ROOM_ID = "4809";
+    static final String ROOM_ID = "61372";
 
     public static void main(String[] args){
         try {
@@ -91,11 +91,12 @@ public class DouyuDanmuClient {
         DouyuMessage douyuLoginMessage = new DouyuMessage(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_LOGIN,ROOM_ID),connection);
 
         douyuLoginMessage.send(new OnMessageSendListener() {
+            @Override
             public void onSuccess() {
                 Log.d("try login...");
                 connection.refreshWrite();
             }
-
+            @Override
             public void onError() {
                 System.out.println("login error...");
             }
@@ -110,29 +111,27 @@ public class DouyuDanmuClient {
 
             SocketChannel channel  = (SocketChannel) key.channel();
 
-            DouyuPacket douyuPacket = DouyuPacketDecoder.decode(channel);
 
-            if(douyuPacket == null){
-                Log.d("-");
-                return;
-            }
+            DouyuPacket douyuPacket = new DouyuPacket();
+            douyuPacket.decode(channel);
 
+            DouyuMessage douyuMessage = new DouyuMessage(douyuPacket,connection);
+            douyuMessage.decode();
 
-
-            Map<String,String> attributes = douyuPacket.decode();
-
-            String type = attributes.get("type");
+            Map<String, String> attributes = douyuMessage.getAttributes();
+            String type = douyuMessage.getAttributes().get("type");
 
             if("loginres".equals(type)){
                 Log.d("login success...");
                 DouyuMessage joingroupMessage = new DouyuMessage(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_JOINGROUP,ROOM_ID),connection);
 
                 joingroupMessage.send(new OnMessageSendListener() {
+                    @Override
                     public void onSuccess() {
                         Log.d("join a group success...");
-                        Log.d("waif for danmu...");
+                        Log.d("waiting for danmu...");
                     }
-
+                    @Override
                     public void onError() {
                         Log.d("join group error...");
                     }
@@ -140,7 +139,7 @@ public class DouyuDanmuClient {
             }
 
             if("chatmsg".equals(type)){
-                Log.d(attributes.get("nn")+":"+attributes.get("txt"));
+                Log.d(douyuMessage.getAttributes().get("nn")+":"+attributes.get("txt"));
             }
 
             if("dgb".equals(type)){

@@ -26,8 +26,7 @@ public abstract class BaseMessage implements Message{
 
     public void send(OnMessageSendListener onMessageSendListener) {
 
-        //ByteBuffer buffer = encode();
-        ;
+
         if(connection.isValid()){
             if(connection.send(packet.encode(),onMessageSendListener)){
                 connection.refreshWrite();

@@ -11,12 +11,12 @@ import com.danmu.protocol.Packet;
 public class DouyuPacketBuilder {
 
 
-    public static Packet build(byte cmd,String content){
+    public static DouyuPacket build(byte cmd,String content){
 
         if(cmd == DouyuPacket.PACKET_TYPE_LOGIN){
 
             String loginWrap = "type@=loginreq/roomid@="+content+"/";
-            Packet packet = new DouyuPacket(loginWrap);
+            DouyuPacket packet = new DouyuPacket(loginWrap.getBytes());
 
             return packet;
         }
@@ -24,7 +24,7 @@ public class DouyuPacketBuilder {
         if(cmd == DouyuPacket.PACKET_TYPE_JOINGROUP){
 
             String loginWrap = "type@=joingroup/rid@="+content+"/gid@=-9999/";
-            Packet packet = new DouyuPacket(loginWrap);
+            DouyuPacket packet = new DouyuPacket(loginWrap.getBytes());
 
             return packet;
         }
@@ -32,7 +32,7 @@ public class DouyuPacketBuilder {
         if(cmd == DouyuPacket.PACKET_TYPE_HEARTBEAT){
 
             String loginWrap = "type@=mrkl/";
-            Packet packet = new DouyuPacket(loginWrap);
+            DouyuPacket packet = new DouyuPacket(loginWrap.getBytes());
 
             return packet;
         }

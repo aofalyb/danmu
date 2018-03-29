@@ -1,6 +1,5 @@
 package com.danmu.common;
 
-import java.nio.ByteBuffer;
 
 /**
  * @author liyang
@@ -12,5 +11,7 @@ public interface Message {
 
 
     void send(OnMessageSendListener onMessageSendListener);
+
+    void decode();
 
 }

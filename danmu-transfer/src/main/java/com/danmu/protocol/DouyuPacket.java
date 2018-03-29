@@ -3,17 +3,17 @@ package com.danmu.protocol;
 
 import com.danmu.common.DouyuSerializeUtil;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.channels.SocketChannel;
 
 /**
  * @author liyang
  * @description:斗鱼弹幕协议（小端整数），基于《斗鱼弹幕服务器第三方接入协议v1.6.2》
  * @date 2018/3/16
  */
-public class DouyuPacket extends Packet {
+public class DouyuPacket implements Packet {
     //消息长度：4 字节小端整数，表示整条消息（不包括自身）长度（字节数）。消息长度出现两遍，二者相同
     //4 bytes
     private int length;
@@ -42,42 +42,10 @@ public class DouyuPacket extends Packet {
     public DouyuPacket() {
     }
 
-    public DouyuPacket(String content) {
-        super(content);
-        body = content.getBytes();
-        length = body.length + 4 + 2 + 1 + 1 + 1;
+    public DouyuPacket(byte[] body) {
+        this.body = body;
+        length = this.body.length + 4 + 2 + 1 + 1 + 1;
     }
-
-
-    public ByteBuffer encode() {
-        ByteBuffer buffer = ByteBuffer.allocate(getLength() + 4).order(ByteOrder.LITTLE_ENDIAN);
-
-        buffer.putInt(getLength());
-        buffer.putInt(getLength());
-
-        buffer.putShort(DouyuPacket.PACKET_TYPE_TO_SERVER);
-        buffer.put(getEncrypt());
-        buffer.put(getReserved());
-
-        buffer.put(getBody());
-        buffer.put(getEnding());
-        buffer.flip();
-
-        return buffer;
-    }
-
-
-    public Map decode() {
-        byte[] douyuPacketBody = getBody();
-
-        if(douyuPacketBody != null){
-           return DouyuSerializeUtil.unSerialize(new String(douyuPacketBody));
-        }
-
-        return new HashMap();
-    }
-
-
 
 
     public int getLength() {
@@ -110,9 +78,61 @@ public class DouyuPacket extends Packet {
         return ending;
     }
 
+
+    @Override
+    public ByteBuffer encode() {
+        ByteBuffer buffer = ByteBuffer.allocate(getLength() + 4).order(ByteOrder.LITTLE_ENDIAN);
+
+        buffer.putInt(getLength());
+        buffer.putInt(getLength());
+
+        buffer.putShort(DouyuPacket.PACKET_TYPE_TO_SERVER);
+        buffer.put(getEncrypt());
+        buffer.put(getReserved());
+
+        buffer.put(getBody());
+        buffer.put(getEnding());
+        buffer.flip();
+
+        return buffer;
+    }
+
+
+    @Override
+    public void decode(SocketChannel channel) throws IOException {
+
+        ByteBuffer lengthBuffer = ByteBuffer.allocate(4 + 4 + 2 + 2).order(ByteOrder.LITTLE_ENDIAN);
+        channel.read(lengthBuffer);
+        lengthBuffer.flip();
+
+        if (lengthBuffer.remaining() < 4) {
+            return;
+        }
+
+        int contentLength = lengthBuffer.getInt();
+        setLength(contentLength);
+
+        int realLength = contentLength - 4 - 2 -2 - 1;
+        ByteBuffer contentBuffer = ByteBuffer.allocate(realLength);
+
+        int read = channel.read(contentBuffer);
+
+        while (read < realLength){
+
+            read += channel.read(contentBuffer);
+        }
+        //设置包体
+        setBody(contentBuffer.array());
+
+        ByteBuffer ending = ByteBuffer.allocate(1);
+        channel.read(ending);
+        ending.flip();
+    }
+
+
     @Override
     public String toString() {
-        return "DouyuPacket{" +
+        return "{" +
                 "length=" + length +
                 ", encrypt=" + encrypt +
                 ", reserved=" + reserved +
