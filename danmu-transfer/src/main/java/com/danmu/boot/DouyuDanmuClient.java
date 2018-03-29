@@ -29,12 +29,12 @@ public class DouyuDanmuClient {
 
     static Connection connection;
 
-    static final String ROOM_ID = "61372";
+    static final String ROOM_ID = "3168536";
 
     public static void main(String[] args){
         try {
             Selector selector = Selector.open();
-             channel = SocketChannel.open();
+            channel = SocketChannel.open();
             channel.configureBlocking(false);
             channel.connect(new InetSocketAddress("openbarrage.douyutv.com",8601));
             channel.register(selector, SelectionKey.OP_CONNECT);
@@ -78,7 +78,6 @@ public class DouyuDanmuClient {
 
                 channel.finishConnect();
                 doLogin();
-
             }
 
         }
@@ -104,6 +103,8 @@ public class DouyuDanmuClient {
 
     }
 
+
+    private static int giftCount = 0;
 
     private static void handleMessage(SelectionKey key) throws IOException{
 
@@ -145,7 +146,7 @@ public class DouyuDanmuClient {
             }
 
             if("dgb".equals(type)){
-                Log.d("###"+attributes.get("nn")+"赠送了礼物gfid#["+attributes.get("gfid")+"]"+"###");
+                Log.d("###"+attributes.get("nn")+"赠送了礼物gfid#["+attributes.get("gfid")+"]"+"###" + ++giftCount + "###");
             }
 
         }
