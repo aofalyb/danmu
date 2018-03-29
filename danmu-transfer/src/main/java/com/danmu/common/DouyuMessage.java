@@ -2,11 +2,6 @@ package com.danmu.common;
 
 import com.danmu.api.Connection;
 import com.danmu.protocol.DouyuPacket;
-import com.danmu.protocol.Packet;
-
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,6 +27,7 @@ public class DouyuMessage extends BaseMessage {
         byte[] douyuPacketBody = ((DouyuPacket) packet).getBody();
 
         if(douyuPacketBody != null){
+            //斗鱼把消息协议放到消息体内...
             attributes = DouyuSerializeUtil.unSerialize(new String(douyuPacketBody));
         }
     }

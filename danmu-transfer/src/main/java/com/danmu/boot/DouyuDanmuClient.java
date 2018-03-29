@@ -118,7 +118,9 @@ public class DouyuDanmuClient {
             DouyuMessage douyuMessage = new DouyuMessage(douyuPacket,connection);
             douyuMessage.decode();
 
+
             Map<String, String> attributes = douyuMessage.getAttributes();
+
             String type = douyuMessage.getAttributes().get("type");
 
             if("loginres".equals(type)){

@@ -9,11 +9,8 @@ import com.danmu.protocol.DouyuPacket;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -103,15 +100,18 @@ public class Connection {
 
     class HeartBeatTask implements Runnable{
 
+        @Override
         public void run() {
 
             if((System.currentTimeMillis() - lastHeartBeatTime) > HEATBEAT_TIME_OUT){
                 Log.d("ping a heat beat...");
                 send(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_HEARTBEAT,rid).encode(), new OnMessageSendListener() {
+                    @Override
                     public void onSuccess() {
                         refresHeartBeat();
                     }
 
+                    @Override
                     public void onError() {
 
                     }
