@@ -25,7 +25,7 @@ public class DouyuDanmuClient {
 
     static Connection connection;
 
-    static final String ROOM_ID = "56040";
+    static final String ROOM_ID = "688";
 
     public static void main(String[] args){
         try {
@@ -35,6 +35,7 @@ public class DouyuDanmuClient {
             channel.connect(new InetSocketAddress("openbarrage.douyutv.com",8601));
 
             channel.register(selector, SelectionKey.OP_CONNECT);
+            channel.socket().setReceiveBufferSize(1024 * 100);
 
             selector.select();
             Set<SelectionKey> selectionKeys = selector.selectedKeys();

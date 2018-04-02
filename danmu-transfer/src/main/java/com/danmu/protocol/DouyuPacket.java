@@ -32,6 +32,8 @@ public class DouyuPacket implements Packet {
 
     public static final byte PACKET_TYPE_HEARTBEAT = 0x03;
 
+    public static final int HEAD_LENGTH = 4 + 4 + 2 + 2;
+
     private byte encrypt = 0x00;
 
     private byte reserved = 0x00;
@@ -102,19 +104,17 @@ public class DouyuPacket implements Packet {
     @Override
     public void decode(SocketChannel channel) throws IOException {
 
-        ByteBuffer lengthBuffer = ByteBuffer.allocate(4 + 4 + 2 + 2).order(ByteOrder.LITTLE_ENDIAN);
+        ByteBuffer lengthBuffer = ByteBuffer.allocate(HEAD_LENGTH).order(ByteOrder.LITTLE_ENDIAN);
         channel.read(lengthBuffer);
         lengthBuffer.flip();
 
-        if (lengthBuffer.remaining() < 4) {
+        if (lengthBuffer.remaining() < HEAD_LENGTH) {
             return;
         }
 
         int contentLength = lengthBuffer.getInt();
-        if(contentLength > 1024 * 50){
-            Log.d("content length -> "+contentLength);
-        }
         setLength(contentLength);
+        Log.d("content length -> "+contentLength);
 
         int realLength = contentLength - 4 - 2 -2 - 1;
         ByteBuffer contentBuffer = ByteBuffer.allocate(realLength);
@@ -122,7 +122,6 @@ public class DouyuPacket implements Packet {
         int read = channel.read(contentBuffer);
 
         while (read < realLength){
-
             read += channel.read(contentBuffer);
         }
         //设置包体
@@ -132,9 +131,7 @@ public class DouyuPacket implements Packet {
         channel.read(ending);
         ending.flip();
         byte endingByte = ending.get();
-        if(endingByte != 0x0000){
-            Log.d("ending is not 0x0000, but -> "+endingByte);
-        }
+        Log.d("ending byte -> "+endingByte);
 
     }
 
