@@ -2,6 +2,7 @@ package com.danmu.protocol;
 
 
 import com.danmu.common.DouyuSerializeUtil;
+import com.danmu.common.Log;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -110,6 +111,9 @@ public class DouyuPacket implements Packet {
         }
 
         int contentLength = lengthBuffer.getInt();
+        if(contentLength > 1024 * 50){
+            Log.d("content length -> "+contentLength);
+        }
         setLength(contentLength);
 
         int realLength = contentLength - 4 - 2 -2 - 1;
@@ -127,6 +131,11 @@ public class DouyuPacket implements Packet {
         ByteBuffer ending = ByteBuffer.allocate(1);
         channel.read(ending);
         ending.flip();
+        byte endingByte = ending.get();
+        if(endingByte != 0x0000){
+            Log.d("ending is not 0x0000, but -> "+endingByte);
+        }
+
     }
 
 
