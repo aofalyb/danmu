@@ -1,7 +1,6 @@
 package com.danmu.boot;
 
 import com.danmu.api.Connection;
-import com.danmu.codec.DouyuPacketDecoder;
 import com.danmu.common.*;
 import com.danmu.protocol.DouyuPacket;
 
@@ -11,6 +10,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -20,16 +20,12 @@ import java.util.Set;
  * @date 2018/3/7
  */
 public class DouyuDanmuClient {
-    static Charset charset = Charset.forName("UTF-8");
-    private volatile boolean stop = false;
-
-    static Selector selector = null;
 
     static SocketChannel channel = null;
 
     static Connection connection;
 
-    static final String ROOM_ID = "4809";
+    static final String ROOM_ID = "56040";
 
     public static void main(String[] args){
         try {
@@ -37,7 +33,7 @@ public class DouyuDanmuClient {
             channel = SocketChannel.open();
             channel.configureBlocking(false);
             channel.connect(new InetSocketAddress("openbarrage.douyutv.com",8601));
-            //channel.connect(new InetSocketAddress("danmu.douyutv.com",8601));
+
             channel.register(selector, SelectionKey.OP_CONNECT);
 
             selector.select();
@@ -54,9 +50,12 @@ public class DouyuDanmuClient {
                 selector.select();
                 Set<SelectionKey> msgKeys = selector.selectedKeys();
 
-                if(msgKeys.iterator().hasNext()){
-                    SelectionKey selectionKey = msgKeys.iterator().next();
-                    handleMessage(selectionKey);
+                Iterator<SelectionKey> iterator = msgKeys.iterator();
+                if(iterator.hasNext()){
+                    SelectionKey selectionKey = iterator.next();
+                    handleReadble(selectionKey);
+                    //记得移除
+                    iterator.remove();
                 }
             }
 
@@ -64,7 +63,6 @@ public class DouyuDanmuClient {
         } catch (Exception e){
             e.printStackTrace();
         }
-
     }
 
 
@@ -107,7 +105,11 @@ public class DouyuDanmuClient {
 
     private static int giftCount = 0;
 
-    private static void handleMessage(SelectionKey key) throws IOException{
+    private static void handleReadble(SelectionKey key) throws IOException{
+
+        if(!key.isValid()){
+            return;
+        }
 
         if(key.isReadable()){
 
