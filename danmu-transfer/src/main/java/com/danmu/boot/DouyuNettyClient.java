@@ -19,18 +19,15 @@ import java.nio.channels.spi.SelectorProvider;
 public class DouyuNettyClient {
 
     private EventLoopGroup workerGroup;
-    protected Bootstrap bootstrap;
-
-
-
+    private Bootstrap bootstrap;
     private void createClient(Listener listener, EventLoopGroup workerGroup, ChannelFactory<? extends Channel> channelFactory) {
         this.workerGroup = workerGroup;
         this.bootstrap = new Bootstrap();
-        bootstrap.group(workerGroup)//
-                .option(ChannelOption.SO_REUSEADDR, true)//
-                .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)//
+        bootstrap.group(workerGroup)
+                .option(ChannelOption.SO_REUSEADDR, true)
+                .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .channelFactory(channelFactory);
-        bootstrap.handler(new ChannelInitializer<Channel>() { // (4)
+        bootstrap.handler(new ChannelInitializer<Channel>() {
             @Override
             public void initChannel(Channel ch) throws Exception {
                 initPipeline(ch.pipeline());
@@ -43,7 +40,6 @@ public class DouyuNettyClient {
     public ChannelFuture connect(String host, int port) {
         return bootstrap.connect(new InetSocketAddress(host, port));
     }
-
     public ChannelFuture connect(String host, int port, Listener listener) {
         return bootstrap.connect(new InetSocketAddress(host, port)).addListener(f -> {
             if (f.isSuccess()) {
@@ -55,7 +51,6 @@ public class DouyuNettyClient {
             }
         });
     }
-
     private void createNioClient(Listener listener) {
         NioEventLoopGroup workerGroup = new NioEventLoopGroup(
                 getWorkThreadNum(), new DefaultThreadFactory("netty-tcp-client"), getSelectorProvider()
@@ -63,7 +58,6 @@ public class DouyuNettyClient {
         workerGroup.setIoRatio(getIoRate());
         createClient(listener, workerGroup, getChannelFactory());
     }
-
     private void createEpollClient(Listener listener) {
         EpollEventLoopGroup workerGroup = new EpollEventLoopGroup(
                 getWorkThreadNum(), new DefaultThreadFactory("netty-tcp-client")

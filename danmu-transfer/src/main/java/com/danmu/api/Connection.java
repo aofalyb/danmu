@@ -1,6 +1,8 @@
 package com.danmu.api;
 
+import com.danmu.common.DouyuPacketBuilder;
 import com.danmu.common.Log;
+import com.danmu.protocol.DouyuPacket;
 import io.netty.channel.Channel;
 
 import java.util.concurrent.Executors;
@@ -30,7 +32,7 @@ public class Connection {
 
     private String rid;
 
-    ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    private static ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
 
     public Connection(Channel channel,String rid) {
@@ -79,7 +81,7 @@ public class Connection {
 
             if((System.currentTimeMillis() - lastHeartBeatTime) > HEATBEAT_TIME_OUT){
                 Log.d("ping a heat beat...");
-                //channel.writeAndFlush(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_LOGIN, RID));
+                channel.writeAndFlush(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_HEARTBEAT,ConnClientChannelHandler.RID));
 
             }
         }

@@ -16,43 +16,69 @@ import java.nio.ByteOrder;
 public class DouyuPacket implements Packet {
     //消息长度：4 字节小端整数，表示整条消息（不包括自身）长度（字节数）。消息长度出现两遍，二者相同
     //4 bytes
-    private int length;
 
     public static final short PACKET_TYPE_TO_SERVER = 689;
-
-    public static final short PACKET_FROM_SERVER = 690;
-
-
     public static final byte PACKET_TYPE_LOGIN = 0x01;
-
-
     public static final byte PACKET_TYPE_JOINGROUP = 0x02;
-
-
     public static final byte PACKET_TYPE_HEARTBEAT = 0x03;
-
     public static final int HEADER_LEN = 12;
+    public static final int INT_LEN = 4;
+    public static final int SHORT_LEN = 2;
+    public static final int BYTE_LEN = 1;
 
     private byte encrypt = 0x00;
-
     private byte reserved = 0x00;
-
     private byte ending = 0x00;
-
+    private int length;
     transient byte[] body;
+    private short type;
 
     public DouyuPacket() {
     }
 
     public DouyuPacket(byte[] body) {
         this.body = body;
-        length = this.body.length + 4 + 2 + 1 + 1 + 1;
+        //这个长度是不包括前四个字节的，文档有误
+        length = this.body.length + INT_LEN + SHORT_LEN + BYTE_LEN + BYTE_LEN + BYTE_LEN;
     }
 
 
-    public int getLength() {
-        return length;
+
+
+    @Override
+    public void encode(ByteBuf out) {
+
+        out.writeIntLE(length);
+        out.writeIntLE(length);
+        out.writeShortLE(DouyuPacket.PACKET_TYPE_TO_SERVER);
+        out.writeByte(encrypt);
+        out.writeByte(reserved);
+        out.writeBytes(body);
+        out.writeByte(ending);
+
     }
+
+    @Override
+    public void decode(ByteBuf byteBuf,int length)  {
+
+        setLength(length);
+        //无意义的重复字段 4
+        byteBuf.readIntLE();
+        //type 2
+        type = byteBuf.readShortLE();
+        //1
+        encrypt = byteBuf.readByte();
+
+        reserved = byteBuf.readByte();
+
+        byte[] body = new byte[length - INT_LEN - SHORT_LEN - BYTE_LEN - BYTE_LEN - BYTE_LEN];
+        byteBuf.readBytes(body);
+        this.body = body;
+        ending = byteBuf.readByte();
+    }
+
+
+
 
     private void setLength(int length) {
         this.length = length;
@@ -63,61 +89,9 @@ public class DouyuPacket implements Packet {
         return body;
     }
 
-
-
-
-
-    @Override
-    public void encode(ByteBuf out) {
-        /*out.order(ByteOrder.LITTLE_ENDIAN);
-        out.writeInt(length);
-        out.writeInt(length);
-        out.writeShort(PACKET_TYPE_TO_SERVER);
-        out.writeByte(encrypt);
-        out.writeByte(reserved);
-        out.writeBytes(getBody());
-        out.writeByte(ending);
-        body = null;*/
-
-        ByteBuffer byteBuffer = ByteBuffer.allocate(length + 4).order(ByteOrder.LITTLE_ENDIAN);
-
-
-        byteBuffer.putInt(length);
-        byteBuffer.putInt(length);
-
-        byteBuffer.putShort(DouyuPacket.PACKET_TYPE_TO_SERVER);
-        byteBuffer.put(encrypt);
-        byteBuffer.put(reserved);
-
-        byteBuffer.put(body);
-        byteBuffer.put(ending);
-        byteBuffer.flip();
-
-        out.writeBytes(byteBuffer.array());
-
-
-
-    }
-
-    @Override
-    public void decode(ByteBuf byteBuf,int length)  {
-        setLength(length);
-        byte[] bytes = new byte[4 + 4];
-        byteBuf.readBytes(bytes);
-
-        byte[] body = new byte[length - 1 - 4 - 4];
-
-        byteBuf.readBytes(body);
-        this.body = body;
-
-        byte ending = byteBuf.readByte();
-        Log.d("ending byte -> "+ending);
-    }
-
-
     @Override
     public String toString() {
-        return "{" +
+        return "douyu -> {" +
                 "length=" + length +
                 ", encrypt=" + encrypt +
                 ", reserved=" + reserved +
@@ -125,5 +99,6 @@ public class DouyuPacket implements Packet {
                 ", body=" + body.length +
                 '}';
     }
+
 
 }
