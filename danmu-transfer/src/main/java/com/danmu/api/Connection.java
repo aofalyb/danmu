@@ -1,14 +1,8 @@
 package com.danmu.api;
 
-import com.danmu.common.DouyuMessage;
-import com.danmu.common.DouyuPacketBuilder;
 import com.danmu.common.Log;
-import com.danmu.common.OnMessageSendListener;
-import com.danmu.protocol.DouyuPacket;
+import io.netty.channel.Channel;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -20,7 +14,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class Connection {
 
-    private SocketChannel channel;
+    private Channel channel;
 
     private long lastReadTime = -1;
 
@@ -32,15 +26,17 @@ public class Connection {
 
     private static final long PEARID = 1 * 1000;
 
+    private boolean heatHeart = false;
+
     private String rid;
 
     ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
 
-    public Connection(SocketChannel channel,String rid) {
+    public Connection(Channel channel,String rid) {
         this.channel = channel;
         this.rid = rid;
-        executorService.scheduleAtFixedRate(new HeartBeatTask(),0,PEARID, TimeUnit.MILLISECONDS);
+        Log.d("chanel -> "+ channel.id() + " active...");
     }
 
 
@@ -67,34 +63,12 @@ public class Connection {
     }
 
 
-    public boolean send(ByteBuffer buffer,OnMessageSendListener onMessageSendListener) {
 
-        int remaining = buffer.remaining();
-
-        try {
-            int writedLength = channel.write(buffer);
-
-            if(remaining == writedLength){
-                onMessageSendListener.onSuccess();
-                return true;
-            }
-
-            onMessageSendListener.onError();
-
-            return false;
-
-        } catch (Exception e) {
-            onMessageSendListener.onError();
-            Log.e(null,e);
-            try {
-                channel.close();
-            } catch (IOException e1) {
-                Log.e("client close...",e1);
-            }
-
-            return false;
+    public void hearBeat(){
+        if(!heatHeart){
+            executorService.scheduleAtFixedRate(new HeartBeatTask(),0,PEARID, TimeUnit.MILLISECONDS);
+            heatHeart = true;
         }
-
     }
 
 
@@ -105,17 +79,8 @@ public class Connection {
 
             if((System.currentTimeMillis() - lastHeartBeatTime) > HEATBEAT_TIME_OUT){
                 Log.d("ping a heat beat...");
-                send(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_HEARTBEAT,rid).encode(), new OnMessageSendListener() {
-                    @Override
-                    public void onSuccess() {
-                        refresHeartBeat();
-                    }
+                //channel.writeAndFlush(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_LOGIN, RID));
 
-                    @Override
-                    public void onError() {
-
-                    }
-                });
             }
         }
     }

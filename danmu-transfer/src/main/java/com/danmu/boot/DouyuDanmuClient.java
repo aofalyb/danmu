@@ -73,7 +73,7 @@ public class DouyuDanmuClient {
             if(channel.isConnectionPending()){
                 Log.d("connected server："+channel.getRemoteAddress());
 
-                connection = new Connection(channel,ROOM_ID);
+                //connection = new Connection(channel,ROOM_ID);
 
                 channel.finishConnect();
                 doLogin();
@@ -117,7 +117,7 @@ public class DouyuDanmuClient {
 
 
             DouyuPacket douyuPacket = new DouyuPacket();
-            douyuPacket.decode(channel);
+            //douyuPacket.decode(channel);
 
             DouyuMessage douyuMessage = new DouyuMessage(douyuPacket,connection);
             douyuMessage.decode();

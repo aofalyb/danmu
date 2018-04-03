@@ -1,5 +1,8 @@
 package com.danmu.boot;
 
+import com.danmu.api.ConnClientChannelHandler;
+import com.danmu.codec.PacketDecoder;
+import com.danmu.codec.PacketEncoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
@@ -17,6 +20,8 @@ public class DouyuNettyClient {
 
     private EventLoopGroup workerGroup;
     protected Bootstrap bootstrap;
+
+
 
     private void createClient(Listener listener, EventLoopGroup workerGroup, ChannelFactory<? extends Channel> channelFactory) {
         this.workerGroup = workerGroup;
@@ -74,11 +79,11 @@ public class DouyuNettyClient {
     }
 
     protected ChannelHandler getDecoder() {
-        return null;
+        return new PacketDecoder();
     }
 
     protected ChannelHandler getEncoder() {
-        return null;
+        return new PacketEncoder();
     }
 
     protected int getIoRate() {
@@ -90,7 +95,7 @@ public class DouyuNettyClient {
     }
 
     public ChannelHandler getChannelHandler(){
-        return null;
+        return new ConnClientChannelHandler();
     }
 
 
@@ -103,7 +108,7 @@ public class DouyuNettyClient {
     }
 
     private boolean useNettyEpoll() {
-        if (true) {
+        if (false) {
             try {
                 Native.offsetofEpollData();
                 return true;

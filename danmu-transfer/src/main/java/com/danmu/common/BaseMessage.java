@@ -27,13 +27,6 @@ public abstract class BaseMessage implements Message{
     public void send(OnMessageSendListener onMessageSendListener) {
 
 
-        if(connection.isValid()){
-            if(connection.send(packet.encode(),onMessageSendListener)){
-                connection.refreshWrite();
-            }
-        }else {
-            Log.d("send on error,maybe connect server timeout...");
-            connection.shutDown();
-        }
+
     }
 }

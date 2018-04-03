@@ -1,13 +1,12 @@
 package com.danmu.protocol;
 
 
-import com.danmu.common.DouyuSerializeUtil;
 import com.danmu.common.Log;
+import io.netty.buffer.ByteBuf;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.SocketChannel;
+
 
 /**
  * @author liyang
@@ -31,6 +30,8 @@ public class DouyuPacket implements Packet {
 
 
     public static final byte PACKET_TYPE_HEARTBEAT = 0x03;
+
+    public static final int HEADER_LEN = 12;
 
     private byte encrypt = 0x00;
 
@@ -62,80 +63,55 @@ public class DouyuPacket implements Packet {
         return body;
     }
 
-    public void setBody(byte[] body) {
+
+
+
+
+    @Override
+    public void encode(ByteBuf out) {
+        /*out.order(ByteOrder.LITTLE_ENDIAN);
+        out.writeInt(length);
+        out.writeInt(length);
+        out.writeShort(PACKET_TYPE_TO_SERVER);
+        out.writeByte(encrypt);
+        out.writeByte(reserved);
+        out.writeBytes(getBody());
+        out.writeByte(ending);
+        body = null;*/
+
+        ByteBuffer byteBuffer = ByteBuffer.allocate(length + 4).order(ByteOrder.LITTLE_ENDIAN);
+
+
+        byteBuffer.putInt(length);
+        byteBuffer.putInt(length);
+
+        byteBuffer.putShort(DouyuPacket.PACKET_TYPE_TO_SERVER);
+        byteBuffer.put(encrypt);
+        byteBuffer.put(reserved);
+
+        byteBuffer.put(body);
+        byteBuffer.put(ending);
+        byteBuffer.flip();
+
+        out.writeBytes(byteBuffer.array());
+
+
+
+    }
+
+    @Override
+    public void decode(ByteBuf byteBuf,int length)  {
+        setLength(length);
+        byte[] bytes = new byte[4 + 4];
+        byteBuf.readBytes(bytes);
+
+        byte[] body = new byte[length - 1 - 4 - 4];
+
+        byteBuf.readBytes(body);
         this.body = body;
-        this.length = this.body.length;
-    }
 
-    public byte getEncrypt() {
-        return encrypt;
-    }
-
-    public byte getReserved() {
-        return reserved;
-    }
-
-    public byte getEnding() {
-        return ending;
-    }
-
-
-    @Override
-    public ByteBuffer encode() {
-        ByteBuffer buffer = ByteBuffer.allocate(getLength() + 4).order(ByteOrder.LITTLE_ENDIAN);
-
-        buffer.putInt(getLength());
-        buffer.putInt(getLength());
-
-        buffer.putShort(DouyuPacket.PACKET_TYPE_TO_SERVER);
-        buffer.put(getEncrypt());
-        buffer.put(getReserved());
-
-        buffer.put(getBody());
-        buffer.put(getEnding());
-        buffer.flip();
-
-        return buffer;
-    }
-
-
-    @Override
-    public void decode(SocketChannel channel) throws IOException {
-
-        ByteBuffer lengthBuffer = ByteBuffer.allocate(4 + 4 + 2 + 2).order(ByteOrder.LITTLE_ENDIAN);
-        channel.read(lengthBuffer);
-        lengthBuffer.flip();
-
-        if (lengthBuffer.remaining() < 4) {
-            return;
-        }
-
-        int contentLength = lengthBuffer.getInt();
-        if(contentLength > 1024 * 50){
-            Log.d("content length -> "+contentLength);
-        }
-        setLength(contentLength);
-
-        int realLength = contentLength - 4 - 2 -2 - 1;
-        ByteBuffer contentBuffer = ByteBuffer.allocate(realLength);
-
-        int read = channel.read(contentBuffer);
-
-        while (read < realLength){
-
-            read += channel.read(contentBuffer);
-        }
-        //设置包体
-        setBody(contentBuffer.array());
-
-        ByteBuffer ending = ByteBuffer.allocate(1);
-        channel.read(ending);
-        ending.flip();
-        byte endingByte = ending.get();
-        if(endingByte != 0x0000){
-            Log.d("ending is not 0x0000, but -> "+endingByte);
-        }
-
+        byte ending = byteBuf.readByte();
+        Log.d("ending byte -> "+ending);
     }
 
 
@@ -149,4 +125,5 @@ public class DouyuPacket implements Packet {
                 ", body=" + body.length +
                 '}';
     }
+
 }
