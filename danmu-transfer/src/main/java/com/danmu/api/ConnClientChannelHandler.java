@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.danmu.common.DouyuMessage;
 import com.danmu.common.DouyuPacketBuilder;
 import com.danmu.common.Log;
+import com.danmu.config.CC;
 import com.danmu.protocol.DouyuPacket;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -21,8 +22,7 @@ public class ConnClientChannelHandler extends ChannelInboundHandlerAdapter {
 
     private Connection connection;
 
-    public static final String RID = "78561";
-
+    public static final String RID = CC.douyu.rid;
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
