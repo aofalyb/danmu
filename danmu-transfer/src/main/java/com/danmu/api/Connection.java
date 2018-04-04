@@ -4,6 +4,8 @@ import com.danmu.common.DouyuPacketBuilder;
 import com.danmu.common.Log;
 import com.danmu.protocol.DouyuPacket;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -81,7 +83,14 @@ public class Connection {
 
             if((System.currentTimeMillis() - lastHeartBeatTime) > HEATBEAT_TIME_OUT){
                 Log.d("ping a heat beat...");
-                channel.writeAndFlush(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_HEARTBEAT,ConnClientChannelHandler.RID));
+                channel.writeAndFlush(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_HEARTBEAT,ConnClientChannelHandler.RID)).addListener(new ChannelFutureListener() {
+                    @Override
+                    public void operationComplete(ChannelFuture future) throws Exception {
+                        if(future.isSuccess()){
+                            lastHeartBeatTime = System.currentTimeMillis();
+                        }
+                    }
+                });
 
             }
         }
