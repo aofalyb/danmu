@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+
+    <Properties>
+        <!-- 是否打印所在的行号(对性能影响比较大) -->
+        <property name="enable_log_location">false</property>
+        <!-- 单次写入日志文件的块大(byte) 100k -->
+        <property name="buffer_size">102400</property>
+        <!-- 应用名 -->
+        <property name="logstack.application.name">barrage</property>
+        <property name="logstack.client.id">mover</property>
+        <property name="vmid">server</property>
+        <!-- 日志输出目录 -->
+        <property name="LOG_HOME">logs/${logstack.application.name}-${logstack.client.id}</property>
+
+        <property name="default_pattern">
+            <![CDATA[ %msg%n ]]>
+        </property>
+
+    </Properties>
+
+    <Appenders>
+        <RollingFile name="default" fileName="${LOG_HOME}/${logstack.application.name}_${vmid}_default.log"
+                     filePattern="${LOG_HOME}/${logstack.application.name}_${vmid}_default_%d{yyyy-MM-dd}_%i.log"
+                     immediateFlush="false" bufferSize="${buffer_size}">
+
+            <PatternLayout pattern="${default_pattern}"/>
+
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="60MB"/>
+            </Policies>
+            <DefaultRolloverStrategy min="1" max="999"/>
+        </RollingFile>
+
+    </Appenders>
+
+    <loggers>
+        <!-- 默认日志打印文件 -->
+        <Root level="INFO" additivity="false" includeLocation="${enable_log_location}">
+            <AppenderRef ref="default"/>
+        </Root>
+
+        <logger name="default" level="DEBUG">
+            <AppenderRef ref="default"/>
+        </logger>
+    </loggers>
+
+
+</Configuration>
