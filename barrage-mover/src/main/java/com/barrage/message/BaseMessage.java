@@ -1,6 +1,6 @@
-package com.barrage.common;
+package com.barrage.message;
 
-import com.barrage.api.Connection;
+import com.barrage.transport.Connection;
 import com.barrage.protocol.Packet;
 
 /**

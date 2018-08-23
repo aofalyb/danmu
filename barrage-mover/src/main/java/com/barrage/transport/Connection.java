@@ -1,6 +1,6 @@
-package com.barrage.api;
+package com.barrage.transport;
 
-import com.barrage.common.DouyuPacketBuilder;
+import com.barrage.util.DouyuPacketBuilder;
 import com.barrage.common.Log;
 import com.barrage.protocol.DouyuPacket;
 import io.netty.channel.Channel;
@@ -81,8 +81,8 @@ public class Connection {
         public void run() {
 
             if((System.currentTimeMillis() - lastHeartBeatTime) > HEATBEAT_TIME_OUT){
-                Log.d("ping a heat beat...");
-                channel.writeAndFlush(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_HEARTBEAT,ConnClientChannelHandler.RID)).addListener(new ChannelFutureListener() {
+                Log.defLogger.info("ping a heat beat...");
+                channel.writeAndFlush(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_HEARTBEAT,rid)).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
                         if(future.isSuccess()){

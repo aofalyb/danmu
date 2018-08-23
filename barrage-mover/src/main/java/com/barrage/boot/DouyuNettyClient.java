@@ -1,8 +1,8 @@
 package com.barrage.boot;
 
-import com.barrage.api.ConnClientChannelHandler;
-import com.barrage.codec.PacketDecoder;
-import com.barrage.codec.PacketEncoder;
+import com.barrage.transport.ConnClientChannelHandler;
+import com.barrage.transport.codec.PacketDecoder;
+import com.barrage.transport.codec.PacketEncoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
@@ -16,7 +16,15 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 import java.net.InetSocketAddress;
 import java.nio.channels.spi.SelectorProvider;
 
-public class DouyuNettyClient {
+public class DouyuNettyClient implements NettyClient{
+
+
+
+    private String rid = null;
+
+    public DouyuNettyClient(String rid) {
+        this.rid = rid;
+    }
 
     private EventLoopGroup workerGroup;
     private Bootstrap bootstrap;
@@ -25,6 +33,7 @@ public class DouyuNettyClient {
         this.bootstrap = new Bootstrap();
         bootstrap.group(workerGroup)
                 .option(ChannelOption.SO_REUSEADDR, true)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,30 * 1000)
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .channelFactory(channelFactory);
         bootstrap.handler(new ChannelInitializer<Channel>() {
@@ -89,7 +98,7 @@ public class DouyuNettyClient {
     }
 
     public ChannelHandler getChannelHandler(){
-        return new ConnClientChannelHandler();
+        return new ConnClientChannelHandler(rid);
     }
 
 

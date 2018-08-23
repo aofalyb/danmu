@@ -1,4 +1,4 @@
-package com.barrage.common;
+package com.barrage.message;
 
 
 /**

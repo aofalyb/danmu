@@ -1,14 +1,9 @@
-package com.barrage.api;
+package com.barrage.transport;
 
-import com.alibaba.fastjson.JSON;
-import com.barrage.common.DouyuMessage;
-import com.barrage.common.DouyuPacketBuilder;
-import com.barrage.common.Log;
-import com.barrage.config.CC;
+import com.barrage.message.DouyuMessage;
+import com.barrage.util.DouyuPacketBuilder;
 import com.barrage.protocol.DouyuPacket;
 import io.netty.channel.*;
-
-import java.util.Map;
 
 /**
  * @author liyang
@@ -20,8 +15,12 @@ public class ConnClientChannelHandler extends ChannelInboundHandlerAdapter {
 
     private Connection connection;
 
-    public static final String RID = CC.douyu.rid;
+    public String RID;
 
+
+    public ConnClientChannelHandler(String rid) {
+        this.RID = rid;
+    }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -29,12 +28,9 @@ public class ConnClientChannelHandler extends ChannelInboundHandlerAdapter {
         DouyuPacket packet = (DouyuPacket) msg;
         DouyuMessage douyuMessage = new DouyuMessage(packet,connection);
         douyuMessage.decode();
-        Map<String, String> attributes = douyuMessage.getAttributes();
-        if(attributes.get("rid") == null) {
-            Log.d(JSON.toJSONString(attributes));
-        }else {
-            Log.d(attributes.get("rid"));
-        }
+        //Map<String, String> attributes = douyuMessage.getAttributes();
+
+
     }
 
 

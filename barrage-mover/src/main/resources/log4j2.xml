@@ -18,22 +18,47 @@
             <PatternLayout pattern="%msg%n" />
         </Console>
 
-        <RollingRandomAccessFile name="RollingRandomAccessFile" fileName="${LOG_HOME}/${logstack.application.name}.log" filePattern="${LOG_HOME}/%d{yyyy-MM-dd}.log">
-            <PatternLayout pattern="%msg%n"/>
+        <RollingRandomAccessFile name="defFile" fileName="${LOG_HOME}/${logstack.application.name}.log" filePattern="${LOG_HOME}/%d{yyyy-MM-dd}.log">
+            <PatternLayout pattern="%msg%n" charset="utf-8"/>
             <Policies>
                 <TimeBasedTriggeringPolicy modulate="true" interval="1"/>
             </Policies>
-            <DefaultRolloverStrategy max="20"/>
+            <DefaultRolloverStrategy max="31"/>
         </RollingRandomAccessFile>
 
         <Async name="AsyncAppender">
-            <AppenderRef ref="RollingRandomAccessFile"/>
+            <AppenderRef ref="defFile"/>
         </Async>
+
+
+        <RollingRandomAccessFile name="errorLog" fileName="${LOG_HOME}/error-${logstack.application.name}.log" filePattern="${LOG_HOME}/error-%d{yyyy-MM-dd}.log">
+            <PatternLayout pattern="%d %-5p [%t] %C{2} (%F:%L) - %msg%n" charset="utf-8"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="50 MB" />
+            </Policies>
+            <DefaultRolloverStrategy max="31"/>
+        </RollingRandomAccessFile>
+
+        <Async name="defAppender">
+            <AppenderRef ref="defFile"/>
+
+        </Async>
+
+        <Async name="errorAppender">
+            <AppenderRef ref="errorLog"/>
+
+        </Async>
+
     </Appenders>
 
     <Loggers>
-        <Logger name="RollingRandomAccessFileLogger" level="info" additivity="false">
-            <AppenderRef ref="AsyncAppender" />
+        <Logger name="defLogger" level="info" additivity="false">
+            <AppenderRef ref="defAppender" />
+            <AppenderRef ref="Console" />
+        </Logger>
+
+        <Logger name="errorLogger" level="info" additivity="false">
+            <AppenderRef ref="errorAppender" />
             <AppenderRef ref="Console" />
         </Logger>
     </Loggers>

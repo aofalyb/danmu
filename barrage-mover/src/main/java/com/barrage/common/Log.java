@@ -9,20 +9,10 @@ import org.apache.logging.log4j.Logger;
  * @description:
  * @date 2018/3/16
  */
-public class Log {
+public interface Log {
 
-    static Logger logger = LogManager.getLogger("RollingRandomAccessFileLogger");
+    Logger defLogger = LogManager.getLogger("defLogger");
 
-    public static void e(String e,Exception exp){
-        if(e != null){
-            System.out.println(e);
-        }
-        if(exp != null){
-            exp.printStackTrace();
-        }
-    }
+    Logger errorLogger =  LogManager.getLogger("errorLogger");
 
-    public static void d(String e){
-        logger.info(e);
-    }
 }

@@ -1,7 +1,10 @@
-package com.barrage.common;
+package com.barrage.message;
 
-import com.barrage.api.Connection;
+import com.barrage.transport.Connection;
+import com.barrage.common.Log;
 import com.barrage.protocol.DouyuPacket;
+
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,7 +31,15 @@ public class DouyuMessage extends BaseMessage {
 
         if(douyuPacketBody != null){
             //斗鱼把消息协议放到消息体内...
-            attributes = DouyuSerializeUtil.unSerialize(new String(douyuPacketBody));
+            String originMsg = null;
+            try {
+                originMsg = new String(douyuPacketBody,"utf-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+                Log.errorLogger.error(e);
+            }
+            //attributes = DouyuSerializeUtil.unSerialize(new String(douyuPacketBody));
+            Log.defLogger.info("#["+System.currentTimeMillis()+"]"+originMsg);
         }
     }
 
