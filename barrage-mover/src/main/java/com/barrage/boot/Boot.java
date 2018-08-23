@@ -49,6 +49,7 @@ public class Boot {
                 @Override
                 public void onFailure(Throwable cause) {
                     Log.errorLogger.error("server start error at room {}.",roomId,cause);
+                    System.exit(0);
                 }
             });
 

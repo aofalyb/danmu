@@ -33,7 +33,6 @@ public class DouyuNettyClient implements NettyClient{
         this.bootstrap = new Bootstrap();
         bootstrap.group(workerGroup)
                 .option(ChannelOption.SO_REUSEADDR, true)
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,30 * 1000)
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .channelFactory(channelFactory);
         bootstrap.handler(new ChannelInitializer<Channel>() {
@@ -90,7 +89,7 @@ public class DouyuNettyClient implements NettyClient{
     }
 
     protected int getIoRate() {
-        return 50;
+        return 10;
     }
 
     protected int getWorkThreadNum() {
@@ -131,7 +130,7 @@ public class DouyuNettyClient implements NettyClient{
     }
 
     protected void initOptions(Bootstrap b) {
-        b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 4000);
+        b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000 * 10);
         b.option(ChannelOption.TCP_NODELAY, true);
     }
 

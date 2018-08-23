@@ -36,6 +36,7 @@ public class ConnClientChannelHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        //  TODO
         connection = new Connection(ctx.channel(),RID);
 
          ctx.writeAndFlush(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_LOGIN, RID)).addListener(new ChannelFutureListener() {

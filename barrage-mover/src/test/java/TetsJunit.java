@@ -1,8 +1,11 @@
+import com.alibaba.fastjson.JSON;
 import com.barrage.common.Log;
+import com.barrage.message.DouyuSerializeUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
 import java.io.*;
+import java.util.Map;
 
 /**
  * @author liyang
@@ -35,8 +38,12 @@ public class TetsJunit {
             String log;
             while ((log = bufferedReader.readLine()) != null) {
 
+               if(log.startsWith("#")) {
+                   String substring = log.substring((System.currentTimeMillis() + "").length() + 3, log.length() - 1);
+                   Map map = DouyuSerializeUtil.unSerialize(substring);
+                   System.out.println(JSON.toJSONString(map));
+               }
 
-                System.out.println(new String(log.getBytes("gbk"),"utf-8"));
 
             }
 
