@@ -11,7 +11,7 @@ import java.util.List;
 
 
 public final class PacketDecoder extends ByteToMessageDecoder {
-    private static final int maxPacketSize = 10 * 1024;
+    private static final int maxPacketSize = 100 * 1024;
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {

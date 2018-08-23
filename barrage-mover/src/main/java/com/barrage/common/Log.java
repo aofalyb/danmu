@@ -1,7 +1,8 @@
 package com.barrage.common;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * @author liyang
@@ -10,7 +11,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Log {
 
-    private static Logger defaultLogger = LoggerFactory.getLogger("default");
+    static Logger logger = LogManager.getLogger("RollingRandomAccessFileLogger");
 
     public static void e(String e,Exception exp){
         if(e != null){
@@ -22,8 +23,6 @@ public class Log {
     }
 
     public static void d(String e){
-        if(defaultLogger.isDebugEnabled()) {
-            defaultLogger.info(e);
-        }
+        logger.info(e);
     }
 }

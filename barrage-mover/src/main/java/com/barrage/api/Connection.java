@@ -40,7 +40,6 @@ public class Connection {
     public Connection(Channel channel,String rid) {
         this.channel = channel;
         this.rid = rid;
-        Log.d("chanel -> "+ channel.id() + " active...");
     }
 
 

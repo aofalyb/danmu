@@ -30,7 +30,11 @@ public class ConnClientChannelHandler extends ChannelInboundHandlerAdapter {
         DouyuMessage douyuMessage = new DouyuMessage(packet,connection);
         douyuMessage.decode();
         Map<String, String> attributes = douyuMessage.getAttributes();
-        Log.d(JSON.toJSONString(attributes));
+        if(attributes.get("rid") == null) {
+            Log.d(JSON.toJSONString(attributes));
+        }else {
+            Log.d(attributes.get("rid"));
+        }
     }
 
 
