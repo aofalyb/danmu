@@ -35,7 +35,7 @@ public class DouyuMessage extends BaseMessage <DouyuPacket> {
                 e.printStackTrace();
                 Log.errorLogger.error(e);
             }
-            //attributes = DouyuSerializeUtil.unSerialize(new String(douyuPacketBody));
+            attributes = DouyuSerializeUtil.unSerialize(new String(douyuPacketBody));
             Log.defLogger.info("#["+System.currentTimeMillis()+"]"+originMsg);
         }
     }

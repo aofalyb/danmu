@@ -1,10 +1,19 @@
 package com.barrage.transport;
 
 import com.barrage.common.Log;
+import com.barrage.message.DouyuLoginMessage;
 import com.barrage.message.DouyuMessage;
-import com.barrage.util.DouyuPacketBuilder;
 import com.barrage.protocol.DouyuPacket;
 import io.netty.channel.*;
+
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author liyang
@@ -15,8 +24,10 @@ import io.netty.channel.*;
 public class ConnClientChannelHandler extends ChannelInboundHandlerAdapter {
 
     private Connection connection;
-
     public String RID;
+
+    private AtomicBoolean lock = new AtomicBoolean(false);
+
 
 
     public ConnClientChannelHandler(String rid) {
@@ -29,7 +40,13 @@ public class ConnClientChannelHandler extends ChannelInboundHandlerAdapter {
         DouyuPacket packet = (DouyuPacket) msg;
         DouyuMessage douyuMessage = new DouyuMessage(packet,connection);
         douyuMessage.decode();
-        //Map<String, String> attributes = douyuMessage.getAttributes();
+        Map<String, String> attributes = douyuMessage.getAttributes();
+
+        String type = attributes.get("type");
+        if(Objects.equals(type,"loginres")) {
+            lock.set(true);
+        }
+
 
 
     }
@@ -40,24 +57,87 @@ public class ConnClientChannelHandler extends ChannelInboundHandlerAdapter {
         //  TODO
         connection = new Connection(ctx.channel(),RID);
 
-         ctx.writeAndFlush(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_LOGIN, RID)).addListener(new ChannelFutureListener() {
-             @Override
-             public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                 if(channelFuture.isSuccess()){
-                     ctx.writeAndFlush(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_JOINGROUP,RID)).addListener(new ChannelFutureListener() {
-                         @Override
-                         public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                             if(channelFuture.isSuccess()){
-                                 connection.hearBeat();
-                             }
-                         }
-                     });
-                 }
-             }
-         });
+        try {
+          //  lock.lock();
+
+            doLogin(connection,new Listener(){
+
+                @Override
+                public void onSuccess() {
+
+                }
+
+                @Override
+                public void onError() {
+
+                }
+            });
+        } finally {
+
+//            lock.unlock();
+
+        }
+
+
+//        ctx.channel().writeAndFlush(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_LOGIN, RID)).addListener(new ChannelFutureListener() {
+//             @Override
+//             public void operationComplete(ChannelFuture channelFuture) throws Exception {
+//                 if(channelFuture.isSuccess()){
+//                     ctx.writeAndFlush(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_JOINGROUP,RID)).addListener(new ChannelFutureListener() {
+//                         @Override
+//                         public void operationComplete(ChannelFuture channelFuture) throws Exception {
+//                             if(channelFuture.isSuccess()){
+//                                 connection.hearBeat();
+//                             }
+//                         }
+//                     });
+//                 }
+//             }
+//         });
 
 
     }
+
+    //登录弹幕服务器
+    private void doLogin(Connection connection,Listener listener) {
+
+        new DouyuLoginMessage(null,connection)
+                .setRid(RID)
+                .send()
+                .addListener((future -> {
+                    if(future.isSuccess()) {
+                        //15秒超时时间
+                        long b_t = System.currentTimeMillis();
+
+                        while (((System.currentTimeMillis() - b_t) < DouyuLoginMessage.LOGIN_TIME_OUT) || !lock.get()) {
+                            if((System.currentTimeMillis() - b_t) > DouyuLoginMessage.LOGIN_TIME_OUT) {
+
+                                //超时了,直接退出程序
+                                Log.errorLogger.error("login douyu room time out rid={},sys exit...",RID);
+                                listener.onError();
+                                System.exit(0);
+                            }
+
+                            if(lock.get()) {
+                                break;
+                            }
+
+                            Thread.sleep(100);
+                        }
+
+                        //发送入组消息
+                        joinGroup(connection,listener);
+                    }
+                }));
+    }
+
+
+    private void joinGroup(Connection connection,Listener listener) {
+
+
+
+    }
+
 
 
     @Override

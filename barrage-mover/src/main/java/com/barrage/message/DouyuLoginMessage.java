@@ -2,6 +2,7 @@ package com.barrage.message;
 
 import com.barrage.protocol.DouyuPacket;
 import com.barrage.transport.Connection;
+import com.barrage.util.DouyuPacketBuilder;
 import io.netty.channel.ChannelFuture;
 
 /**
@@ -9,18 +10,23 @@ import io.netty.channel.ChannelFuture;
  */
 public class DouyuLoginMessage extends BaseMessage<DouyuPacket> {
 
+    public static final int LOGIN_TIME_OUT = 5 * 1000;
+
+    private String rid;
+
+    public DouyuLoginMessage setRid(String rid) {
+        this.rid = rid;
+        return this;
+    }
+
     public DouyuLoginMessage(DouyuPacket packet, Connection connection) {
         super(packet, connection);
     }
 
     @Override
-    public void decode() {
-
+    public void encode() {
+        packet = DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_LOGIN, rid);
     }
 
-    @Override
-    public ChannelFuture send() {
 
-        return super.send();
-    }
 }

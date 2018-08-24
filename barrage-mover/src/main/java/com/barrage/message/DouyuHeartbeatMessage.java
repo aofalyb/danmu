@@ -22,9 +22,5 @@ public class DouyuHeartbeatMessage extends BaseMessage<DouyuPacket> {
         packet = new DouyuPacket(HEART_BEAT_CMD.getBytes());
     }
 
-    @Override
-    public ChannelFuture send() {
-        super.send();
-        return connection.send(packet);
-    }
+
 }

@@ -34,7 +34,6 @@ public abstract class BaseMessage<T extends Packet>  implements Message {
     public ChannelFuture send() {
         encode();
 
-
-        return null;
+        return connection.send(packet);
     }
 }

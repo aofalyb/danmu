@@ -6,6 +6,9 @@ import io.netty.buffer.Unpooled;
 
 import java.io.*;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author liyang
@@ -32,25 +35,37 @@ public class TetsJunit {
             Log.errorLogger.error("{}",145456,e);
         }
 
+//
+//        try {
+//            BufferedReader bufferedReader = new BufferedReader(new FileReader("D:\\java-projects\\danmu\\barrage-mover\\target\\logs\\barrage-mover\\barrage.log"));
+//            String log;
+//            while ((log = bufferedReader.readLine()) != null) {
+//
+//               if(log.startsWith("#")) {
+//                   String substring = log.substring((System.currentTimeMillis() + "").length() + 3, log.length() - 1);
+//                   Map map = DouyuSerializeUtil.unSerialize(substring);
+//                   System.out.println(JSON.toJSONString(map));
+//               }
+//
+//
+//            }
+//
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
 
+        boolean await = false;
         try {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader("D:\\java-projects\\danmu\\barrage-mover\\target\\logs\\barrage-mover\\barrage.log"));
-            String log;
-            while ((log = bufferedReader.readLine()) != null) {
-
-               if(log.startsWith("#")) {
-                   String substring = log.substring((System.currentTimeMillis() + "").length() + 3, log.length() - 1);
-                   Map map = DouyuSerializeUtil.unSerialize(substring);
-                   System.out.println(JSON.toJSONString(map));
-               }
-
-
-            }
-
-
-        } catch (Exception e) {
+            ReentrantLock reentrantLock = new ReentrantLock();
+            Condition condition = reentrantLock.newCondition();
+            reentrantLock.lock();
+            await = condition.await(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        System.out.println(await);
 
 
     }

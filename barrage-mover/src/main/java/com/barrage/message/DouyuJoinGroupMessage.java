@@ -18,9 +18,5 @@ public class DouyuJoinGroupMessage extends BaseMessage<DouyuPacket> {
 
     }
 
-    @Override
-    public ChannelFuture send() {
 
-        return super.send();
-    }
 }
