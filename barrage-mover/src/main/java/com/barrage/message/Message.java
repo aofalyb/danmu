@@ -1,6 +1,8 @@
 package com.barrage.message;
 
 
+import io.netty.channel.ChannelFuture;
+
 /**
  * @author liyang
  * @description:
@@ -10,8 +12,10 @@ public interface Message {
 
 
 
-    void send(OnMessageSendListener onMessageSendListener);
+    ChannelFuture send();
 
     void decode();
+
+    void encode();
 
 }

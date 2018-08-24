@@ -2,27 +2,39 @@ package com.barrage.message;
 
 import com.barrage.transport.Connection;
 import com.barrage.protocol.Packet;
+import io.netty.channel.ChannelFuture;
 
 /**
  * @author liyang
  * @description:
  * @date 2018/3/16
  */
-public abstract class BaseMessage implements Message{
+public abstract class BaseMessage<T extends Packet>  implements Message {
 
-    protected Packet packet;
+    protected T packet;
 
-    private Connection connection;
+    protected Connection connection;
 
-    public BaseMessage(Packet packet, Connection connection) {
+    public BaseMessage(T packet, Connection connection) {
         this.packet = packet;
         this.connection = connection;
     }
 
 
-    public void send(OnMessageSendListener onMessageSendListener) {
+    @Override
+    public void decode() {
+
+    }
+
+    @Override
+    public void encode() {
+
+    }
+
+    public ChannelFuture send() {
+        encode();
 
 
-
+        return null;
     }
 }

@@ -62,6 +62,9 @@ public class ConnClientChannelHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        Log.errorLogger.error("client {} offline. try reconnect...",RID);
+        Log.errorLogger.error("ctx : {} ",ctx);
+
     }
 
     @Override

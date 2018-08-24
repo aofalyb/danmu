@@ -13,9 +13,7 @@ import java.util.Map;
  * @description:斗鱼弹幕协议（小端整数），基于《斗鱼弹幕服务器第三方接入协议v1.6.2》
  * @date 2018/3/16
  */
-public class DouyuMessage extends BaseMessage {
-
-
+public class DouyuMessage extends BaseMessage <DouyuPacket> {
 
     private Map<String,String> attributes = new HashMap();
 
@@ -23,11 +21,10 @@ public class DouyuMessage extends BaseMessage {
         super(packet, connection);
     }
 
-
     @Override
     public void decode() {
 
-        byte[] douyuPacketBody = ((DouyuPacket) packet).getBody();
+        byte[] douyuPacketBody = packet.getBody();
 
         if(douyuPacketBody != null){
             //斗鱼把消息协议放到消息体内...
@@ -42,6 +39,8 @@ public class DouyuMessage extends BaseMessage {
             Log.defLogger.info("#["+System.currentTimeMillis()+"]"+originMsg);
         }
     }
+
+
 
     public Map<String, String> getAttributes() {
         return attributes;
