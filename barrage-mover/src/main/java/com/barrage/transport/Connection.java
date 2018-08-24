@@ -24,13 +24,13 @@ public class Connection {
 
     private long lastWriteTime = -1;
 
-    private long lastHeartBeatTime = -1;
+    private volatile long lastHeartBeatTime = -1;
 
     private static final long HEATBEAT_TIME_OUT = 40 * 1000;
 
     private static final long PEARID = 1 * 1000;
 
-    private boolean heatHeart = false;
+    private volatile boolean heatHeart = false;
 
     private String rid;
 
@@ -82,14 +82,11 @@ public class Connection {
 
             if((System.currentTimeMillis() - lastHeartBeatTime) > HEATBEAT_TIME_OUT){
                 Log.defLogger.info("ping a heat beat...");
-                channel.writeAndFlush(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_HEARTBEAT,rid)).addListener(new ChannelFutureListener() {
-                    @Override
-                    public void operationComplete(ChannelFuture future) throws Exception {
-                        if(future.isSuccess()){
-                            lastHeartBeatTime = System.currentTimeMillis();
-                        }
+                channel.writeAndFlush(DouyuPacketBuilder.build(DouyuPacket.PACKET_TYPE_HEARTBEAT,rid)).addListener((future -> {
+                    if(future.isSuccess()){
+                        lastHeartBeatTime = System.currentTimeMillis();
                     }
-                });
+                }));
 
             }
         }

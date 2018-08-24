@@ -1,5 +1,6 @@
 package com.barrage.transport;
 
+import com.barrage.common.Log;
 import com.barrage.message.DouyuMessage;
 import com.barrage.util.DouyuPacketBuilder;
 import com.barrage.protocol.DouyuPacket;
@@ -63,4 +64,11 @@ public class ConnClientChannelHandler extends ChannelInboundHandlerAdapter {
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
     }
 
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+
+        Log.errorLogger.error(ctx,cause);
+        //TODO 检测链接可用性，不可用尝试重连 988 952595 3857053
+
+    }
 }
