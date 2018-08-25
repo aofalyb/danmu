@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public class DouyuMessage extends BaseMessage <DouyuPacket> {
 
-    private Map<String,String> attributes = new HashMap();
+    protected Map<String,String> attributes = new HashMap();
 
     public DouyuMessage(DouyuPacket packet, Connection connection) {
         super(packet, connection);
@@ -40,6 +40,10 @@ public class DouyuMessage extends BaseMessage <DouyuPacket> {
         }
     }
 
+    @Override
+    public String getMessageType() {
+        return attributes.get("type");
+    }
 
 
     public Map<String, String> getAttributes() {

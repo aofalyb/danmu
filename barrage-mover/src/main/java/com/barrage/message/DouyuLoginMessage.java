@@ -8,7 +8,7 @@ import io.netty.channel.ChannelFuture;
 /**
  * 心跳消息
  */
-public class DouyuLoginMessage extends BaseMessage<DouyuPacket> {
+public class DouyuLoginMessage extends DouyuMessage {
 
     public static final int LOGIN_TIME_OUT = 5 * 1000;
 

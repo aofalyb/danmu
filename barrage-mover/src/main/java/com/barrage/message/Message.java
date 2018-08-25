@@ -18,4 +18,6 @@ public interface Message {
 
     void encode();
 
+    String getMessageType();
+
 }

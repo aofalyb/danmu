@@ -7,7 +7,7 @@ import io.netty.channel.ChannelFuture;
 /**
  * 心跳消息
  */
-public class DouyuHeartbeatMessage extends BaseMessage<DouyuPacket> {
+public class DouyuHeartbeatMessage extends DouyuMessage {
 
     private DouyuPacket packet;
 
