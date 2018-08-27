@@ -23,5 +23,9 @@ public class ClientManager {
 
     }
 
+    public static void closeAll() {
+
+    }
+
 
 }

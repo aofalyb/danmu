@@ -1,15 +1,13 @@
 package com.barrage.message;
 
 import com.barrage.protocol.DouyuPacket;
-import com.barrage.transport.Connection;
-import io.netty.channel.ChannelFuture;
+import com.barrage.netty.Connection;
 
 /**
  * 心跳消息
  */
 public class DouyuHeartbeatMessage extends DouyuMessage {
 
-    private DouyuPacket packet;
 
     private static final String HEART_BEAT_CMD = "type@=mrkl/";
 
@@ -21,6 +19,4 @@ public class DouyuHeartbeatMessage extends DouyuMessage {
     public void encode() {
         packet = new DouyuPacket(HEART_BEAT_CMD.getBytes());
     }
-
-
 }

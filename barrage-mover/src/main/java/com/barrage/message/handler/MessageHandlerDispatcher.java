@@ -1,8 +1,11 @@
 package com.barrage.message.handler;
 
 
+import com.barrage.common.Constants;
+import com.barrage.message.DouyuLoginMessage;
 import com.barrage.message.Message;
-import com.barrage.transport.Connection;
+import com.barrage.netty.Connection;
+import com.barrage.netty.Listener;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,8 +25,16 @@ public class MessageHandlerDispatcher {
         this.connection = connection;
     }
 
-    public void regiter(String key, IMessageHandler messageHandler) {
-        handlerMap.put(key,messageHandler);
+    public void register(String key, IMessageHandler messageHandler) {
+        if(key.contains("|")) {
+            String[] keys = key.split(Constants.OR);
+            for (String singleKey: keys) {
+
+                handlerMap.put(singleKey,messageHandler);
+            }
+
+
+        }
     }
 
 
@@ -33,14 +44,19 @@ public class MessageHandlerDispatcher {
     }
 
 
-    public boolean handle(Message message) {
+    public boolean dispatch(Message message ,Listener listener) {
+        Message decodeMessage = message.decode();
 
-        IMessageHandler handler = getHandler(message.getMessageType());
+        IMessageHandler handler = getHandler(decodeMessage.getMessageType());
         if(handler == null) {
-            throw new MessageHandleRuntimeException("can`t find any handler match key "+message.getMessageType()+".");
+            //throw new MessageHandleRuntimeException("can`t find any handler match key "+message.getMessageType()+".");
+            return false;
         }
+        //TODO 这里需要细化到具体的message类型
 
-        return handler.handle(connection,message);
+
+
+        return handler.handle(connection,decodeMessage,listener);
     }
 
 

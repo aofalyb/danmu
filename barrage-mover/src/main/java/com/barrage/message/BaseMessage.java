@@ -1,6 +1,6 @@
 package com.barrage.message;
 
-import com.barrage.transport.Connection;
+import com.barrage.netty.Connection;
 import com.barrage.protocol.Packet;
 import io.netty.channel.ChannelFuture;
 
@@ -22,8 +22,9 @@ public abstract class BaseMessage<T extends Packet>  implements Message {
 
 
     @Override
-    public void decode() {
+    public Message decode() {
 
+        return this;
     }
 
     @Override

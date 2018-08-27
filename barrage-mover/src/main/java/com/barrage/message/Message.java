@@ -14,7 +14,7 @@ public interface Message {
 
     ChannelFuture send();
 
-    void decode();
+    Message decode();
 
     void encode();
 

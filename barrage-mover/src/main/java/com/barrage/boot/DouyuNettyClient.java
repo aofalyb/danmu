@@ -1,157 +1,79 @@
 package com.barrage.boot;
 
-import com.barrage.transport.ConnClientChannelHandler;
-import com.barrage.transport.codec.PacketDecoder;
-import com.barrage.transport.codec.PacketEncoder;
-import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.PooledByteBufAllocator;
+
+import com.barrage.message.DouyuLoginMessage;
+import com.barrage.netty.DouyuConnClientChannelHandler;
+import com.barrage.netty.Listener;
+import com.barrage.netty.NettyClientException;
 import io.netty.channel.*;
-import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.epoll.EpollSocketChannel;
-import io.netty.channel.epoll.Native;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.util.concurrent.DefaultThreadFactory;
 
-import java.net.InetSocketAddress;
-import java.nio.channels.spi.SelectorProvider;
-
-public class DouyuNettyClient implements NettyClient{
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 
+public class DouyuNettyClient extends NettyClient {
 
-    private String rid = null;
+    private String rid;
+    private Listener listener;
+
+    private volatile boolean loginSuccess = false;
+
 
     public DouyuNettyClient(String rid) {
         this.rid = rid;
     }
 
-    private EventLoopGroup workerGroup;
-    private Bootstrap bootstrap;
-    private void createClient(Listener listener, EventLoopGroup workerGroup, ChannelFactory<? extends Channel> channelFactory) {
-        this.workerGroup = workerGroup;
-        this.bootstrap = new Bootstrap();
-        bootstrap.group(workerGroup)
-                .option(ChannelOption.SO_REUSEADDR, true)
-                .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                .channelFactory(channelFactory);
-        bootstrap.handler(new ChannelInitializer<Channel>() {
-            @Override
-            public void initChannel(Channel ch) throws Exception {
-                initPipeline(ch.pipeline());
-            }
-        });
-        initOptions(bootstrap);
-        listener.onSuccess();
-    }
+    interface LoginListener extends Listener {
 
-    public ChannelFuture connect(String host, int port) {
-        return bootstrap.connect(new InetSocketAddress(host, port));
-    }
-    public ChannelFuture connect(String host, int port, Listener listener) {
-        return bootstrap.connect(new InetSocketAddress(host, port)).addListener(f -> {
-            if (f.isSuccess()) {
-                if (listener != null) listener.onSuccess(port);
-
-            } else {
-                if (listener != null) listener.onFailure(f.cause());
-
-            }
-        });
-    }
-    private void createNioClient(Listener listener) {
-        NioEventLoopGroup workerGroup = new NioEventLoopGroup(
-                getWorkThreadNum(), new DefaultThreadFactory("netty-tcp-client"), getSelectorProvider()
-        );
-        workerGroup.setIoRatio(getIoRate());
-        createClient(listener, workerGroup, getChannelFactory());
-    }
-    private void createEpollClient(Listener listener) {
-        EpollEventLoopGroup workerGroup = new EpollEventLoopGroup(
-                getWorkThreadNum(), new DefaultThreadFactory("netty-tcp-client")
-        );
-        workerGroup.setIoRatio(getIoRate());
-        createClient(listener, workerGroup, EpollSocketChannel::new);
-    }
-
-    protected void initPipeline(ChannelPipeline pipeline) {
-        pipeline.addLast("decoder", getDecoder());
-        pipeline.addLast("encoder", getEncoder());
-        pipeline.addLast("handler", getChannelHandler());
-    }
-
-    protected ChannelHandler getDecoder() {
-        return new PacketDecoder();
-    }
-
-    protected ChannelHandler getEncoder() {
-        return new PacketEncoder();
-    }
-
-    protected int getIoRate() {
-        return 10;
-    }
-
-    protected int getWorkThreadNum() {
-        return 1;
-    }
-
-    public ChannelHandler getChannelHandler(){
-        return new ConnClientChannelHandler(rid);
-    }
-
-
-    protected void doStart(Listener listener) throws Throwable {
-        if (useNettyEpoll()) {
-            createEpollClient(listener);
-        } else {
-            createNioClient(listener);
-        }
-    }
-
-    private boolean useNettyEpoll() {
-        if (false) {
-            try {
-                Native.offsetofEpollData();
-                return true;
-            } catch (UnsatisfiedLinkError error) {
-
-            }
-        }
-        return false;
-    }
-
-
-    protected void doStop(Listener listener) throws Throwable {
-        if (workerGroup != null) {
-            workerGroup.shutdownGracefully();
-        }
-        listener.onSuccess();
-    }
-
-    protected void initOptions(Bootstrap b) {
-        b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000 * 10);
-        b.option(ChannelOption.TCP_NODELAY, true);
-    }
-
-    public ChannelFactory<? extends Channel> getChannelFactory() {
-        return NioSocketChannel::new;
-    }
-
-    public SelectorProvider getSelectorProvider() {
-        return SelectorProvider.provider();
     }
 
     @Override
-    public String toString() {
-        return "NettyClient{" +
-                ", name=" + this.getClass().getSimpleName() +
-                '}';
+    public ChannelHandler getChannelHandler() {
+        return new DouyuConnClientChannelHandler(rid, new LoginListener() {
+            @Override
+            public void onSuccess(Object... args) {
+                if(listener != null) {
+                    listener.onSuccess(args);
+                    loginSuccess = true;
+                }
+            }
+
+            @Override
+            public void onFailure(Throwable cause) {
+                if(listener != null) {
+                    listener.onFailure(cause);
+                }
+            }
+        });
     }
 
-    public interface Listener {
-        void onSuccess(Object... args);
+    @Override
+    public void login(Listener listener) {
 
-        void onFailure(Throwable cause);
+        this.listener = listener;
+
+        try {
+            init(listener);
+            ChannelFuture connect = connect("openbarrage.douyutv.com", 8601);
+            connect.get(DouyuLoginMessage.LOGIN_TIME_OUT, TimeUnit.MILLISECONDS);
+            if(!connect.isSuccess()) {
+                listener.onFailure(null);
+            }
+
+            //超时检查
+            Thread.sleep(DouyuLoginMessage.LOGIN_TIME_OUT);
+            if(!loginSuccess) {
+                listener.onFailure(new NettyClientException("login time out ,rid="+rid));
+            }
+
+        } catch (Throwable throwable) {
+            listener.onFailure(throwable);
+            return;
+        }
     }
+
+
+
 }

@@ -1,5 +1,5 @@
 
-package com.barrage.transport.codec;
+package com.barrage.netty.codec;
 import com.barrage.protocol.DouyuPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;

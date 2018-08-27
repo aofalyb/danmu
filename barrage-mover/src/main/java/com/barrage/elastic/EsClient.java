@@ -83,7 +83,7 @@ public class EsClient {
         TypesExistsResponse typesResponse = client.admin().indices().prepareTypesExists(INDEX_NAME).setTypes(TYPE_NAME).execute().actionGet();
         Log.errorLogger.error("TypesExistsResponse="+typesResponse.isExists());
         if(!typesResponse.isExists()) {
-            // 创建索引映射,相当于创建数据库中的表操作
+
             XContentBuilder mapping = XContentFactory.jsonBuilder().startObject().startObject("properties")
                     .startObject("uid").field("type", "keyword").endObject()
                     .startObject("nn").field("type", "keyword").endObject()
@@ -107,9 +107,9 @@ public class EsClient {
         long _s = System.currentTimeMillis();
 
         IndexResponse response = client.prepareIndex(INDEX_NAME, TYPE_NAME)
-                .setSource(XContentFactory.jsonBuilder().startObject()// 开始
-                        .field("uid", uid)// 商品名称
-                        .field("nn", nn)// 商品价格
+                .setSource(XContentFactory.jsonBuilder().startObject()
+                        .field("uid", uid)
+                        .field("nn", nn)
                         .field("text", text)
                         .endObject()).setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE).get();
 

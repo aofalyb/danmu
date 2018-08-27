@@ -1,6 +1,6 @@
 package com.barrage.message;
 
-import com.barrage.transport.Connection;
+import com.barrage.netty.Connection;
 import com.barrage.common.Log;
 import com.barrage.protocol.DouyuPacket;
 
@@ -22,7 +22,7 @@ public class DouyuMessage extends BaseMessage <DouyuPacket> {
     }
 
     @Override
-    public void decode() {
+    public DouyuMessage decode() {
 
         byte[] douyuPacketBody = packet.getBody();
 
@@ -31,13 +31,16 @@ public class DouyuMessage extends BaseMessage <DouyuPacket> {
             String originMsg = null;
             try {
                 originMsg = new String(douyuPacketBody,"utf-8");
+
+                attributes = DouyuSerializeUtil.unSerialize(originMsg);
             } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
                 Log.errorLogger.error(e);
             }
-            attributes = DouyuSerializeUtil.unSerialize(new String(douyuPacketBody));
+
             Log.defLogger.info("#["+System.currentTimeMillis()+"]"+originMsg);
         }
+
+        return this;
     }
 
     @Override

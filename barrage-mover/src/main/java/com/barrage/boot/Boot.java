@@ -2,6 +2,7 @@ package com.barrage.boot;
 
 import com.barrage.common.Log;
 import com.barrage.config.CC;
+import com.barrage.netty.Listener;
 import com.barrage.util.ClientManager;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -23,27 +24,19 @@ public class Boot {
             return;
         }
 
+
+
         for (int i = 0; i < roomIdArray.length; i++) {
             String roomId = roomIdArray[i];
 
             DouyuNettyClient douyuRoom = new DouyuNettyClient(roomId);
 
-            douyuRoom.doStart(new DouyuNettyClient.Listener() {
+
+            douyuRoom.login(new Listener() {
                 @Override
                 public void onSuccess(Object... args) {
-                    ChannelFuture connect = douyuRoom.connect("openbarrage.douyutv.com", 8601);
 
-                    connect.addListener((future) -> {
-                       if(future.isSuccess()) {
-                           ClientManager.put(roomId,douyuRoom);
-                       } else {
-
-                           Log.errorLogger.error("server start error at room {}.",roomId);
-                           Log.errorLogger.error(connect);
-                           System.exit(0);
-                       }
-                    });
-
+                    ClientManager.put(roomId,douyuRoom);
 
                 }
                 @Override
@@ -57,6 +50,20 @@ public class Boot {
         System.out.println("===================================================================");
         System.out.println("=================== BARRAGE SERVER STARTING =======================");
         System.out.println("===================================================================");
+
+        addShutdownHook();
+
+    }
+
+    private static void addShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("===================================================================");
+            System.out.println("====================== BARRAGE SERVER STOP ========================");
+            System.out.println("===================================================================");
+            Log.errorLogger.error("server stop now...");
+            ClientManager.closeAll();
+
+        }));
 
     }
 }
