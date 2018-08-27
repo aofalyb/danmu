@@ -7,7 +7,7 @@ import io.netty.channel.ChannelFuture;
 /**
  * 心跳消息
  */
-public class DouyuHeartbeatMessage extends BaseMessage<DouyuPacket> {
+public class DouyuHeartbeatMessage extends DouyuMessage {
 
     private DouyuPacket packet;
 
@@ -22,9 +22,5 @@ public class DouyuHeartbeatMessage extends BaseMessage<DouyuPacket> {
         packet = new DouyuPacket(HEART_BEAT_CMD.getBytes());
     }
 
-    @Override
-    public ChannelFuture send() {
-        super.send();
-        return connection.send(packet);
-    }
+
 }

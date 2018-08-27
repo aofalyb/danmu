@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public class DouyuMessage extends BaseMessage <DouyuPacket> {
 
-    private Map<String,String> attributes = new HashMap();
+    protected Map<String,String> attributes = new HashMap();
 
     public DouyuMessage(DouyuPacket packet, Connection connection) {
         super(packet, connection);
@@ -35,11 +35,15 @@ public class DouyuMessage extends BaseMessage <DouyuPacket> {
                 e.printStackTrace();
                 Log.errorLogger.error(e);
             }
-            //attributes = DouyuSerializeUtil.unSerialize(new String(douyuPacketBody));
+            attributes = DouyuSerializeUtil.unSerialize(new String(douyuPacketBody));
             Log.defLogger.info("#["+System.currentTimeMillis()+"]"+originMsg);
         }
     }
 
+    @Override
+    public String getMessageType() {
+        return attributes.get("type");
+    }
 
 
     public Map<String, String> getAttributes() {

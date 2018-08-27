@@ -7,7 +7,7 @@ import io.netty.channel.ChannelFuture;
 /**
  * 心跳消息
  */
-public class DouyuJoinGroupMessage extends BaseMessage<DouyuPacket> {
+public class DouyuJoinGroupMessage extends DouyuMessage {
 
     public DouyuJoinGroupMessage(DouyuPacket packet, Connection connection) {
         super(packet, connection);
@@ -18,9 +18,5 @@ public class DouyuJoinGroupMessage extends BaseMessage<DouyuPacket> {
 
     }
 
-    @Override
-    public ChannelFuture send() {
 
-        return super.send();
-    }
 }
