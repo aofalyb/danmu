@@ -7,5 +7,5 @@ import com.barrage.netty.Listener;
 
 public interface IMessageHandler<T extends Message> {
 
-    boolean handle(Connection connection, T message, Listener listener);
+    boolean handle(Connection connection, T message);
 }

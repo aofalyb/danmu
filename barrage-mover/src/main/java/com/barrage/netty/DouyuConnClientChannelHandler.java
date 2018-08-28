@@ -4,12 +4,12 @@ import com.barrage.common.Constants;
 import com.barrage.common.Log;
 import com.barrage.message.DouyuLoginMessage;
 import com.barrage.message.DouyuMessage;
+import com.barrage.message.handler.DouyuDefaultMessageHandler;
 import com.barrage.message.handler.DouyuLoginMessageHandler;
 import com.barrage.message.handler.MessageHandlerDispatcher;
 import com.barrage.protocol.DouyuPacket;
 import io.netty.channel.*;
 
-import java.util.concurrent.CountDownLatch;
 
 /**
  * @author liyang
@@ -24,13 +24,9 @@ public class DouyuConnClientChannelHandler extends ChannelInboundHandlerAdapter 
 
     private MessageHandlerDispatcher messageHandlerDispatcher;
 
-    private Listener listener;
 
-
-
-    public DouyuConnClientChannelHandler(String rid,Listener listener) {
+    public DouyuConnClientChannelHandler(String rid) {
         this.RID = rid;
-        this.listener = listener;
     }
 
     @Override
@@ -38,9 +34,8 @@ public class DouyuConnClientChannelHandler extends ChannelInboundHandlerAdapter 
 
         DouyuPacket packet = (DouyuPacket) msg;
         DouyuMessage douyuMessage = new DouyuMessage(packet,connection);
-        messageHandlerDispatcher.dispatch(douyuMessage,listener);
-
-
+        messageHandlerDispatcher.dispatch(douyuMessage);
+        connection.refreshRead();
     }
 
 
@@ -51,13 +46,15 @@ public class DouyuConnClientChannelHandler extends ChannelInboundHandlerAdapter 
         //init handler
         messageHandlerDispatcher = new MessageHandlerDispatcher(connection);
         messageHandlerDispatcher.register("loginres|loginreq",new DouyuLoginMessageHandler());
+        messageHandlerDispatcher.register("def",new DouyuDefaultMessageHandler());
+
 
         doLogin(connection);
 
     }
 
     //登录弹幕服务器
-    private void doLogin(Connection connection) throws NettyClientException {
+    private void doLogin(Connection connection) {
 
         new DouyuLoginMessage(null,connection)
                 .send()
@@ -76,6 +73,7 @@ public class DouyuConnClientChannelHandler extends ChannelInboundHandlerAdapter 
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        connection.refreshState(Connection.ConnectionState.INACTIVE);
         Log.errorLogger.error("client {} offline. try reconnect...",RID);
         Log.errorLogger.error("ctx : {} ",ctx);
 

@@ -47,10 +47,11 @@ public class Connection {
 
     }
 
+    public static final long HEATBEAT_TIME_OUT = 40 * 1000;
     private Channel channel;
     private volatile long lastReadTime = -1;
     private volatile long lastHeartBeatTime = -1;
-    private static final long HEATBEAT_TIME_OUT = 40 * 1000;
+
     private volatile boolean heatHeart = false;
 
     private volatile ConnectionState state = ConnectionState.NEW;
@@ -69,17 +70,20 @@ public class Connection {
         return rid;
     }
 
+
     public void refreshRead(){
         lastReadTime = System.currentTimeMillis();
     }
 
+    /**
+     * ping -> pong
+     */
     private void refreshHeartBeat(){
         lastHeartBeatTime = System.currentTimeMillis();
     }
 
     public void refreshState(ConnectionState newState) {
         this.state = newState;
-
     }
 
 
@@ -91,7 +95,7 @@ public class Connection {
         }
     }
 
-    private boolean heatTimeout() {
+    public boolean heatTimeout() {
         return (System.currentTimeMillis() - lastHeartBeatTime) > HEATBEAT_TIME_OUT;
     }
 
@@ -136,18 +140,16 @@ public class Connection {
 
         @Override
         public void run() {
-            if(heatTimeout()){
 
-                new DouyuHeartbeatMessage(null,connection)
-                        .send()
-                        .addListener((future -> {
-                            if(future.isSuccess()) {
-                                refreshHeartBeat();
-                                Log.defLogger.info("ping a heat beat...");
-                            }
-                        }));
+            new DouyuHeartbeatMessage(null,connection)
+                    .send()
+                    .addListener((future -> {
+                        if(future.isSuccess()) {
+                            refreshHeartBeat();
+                            Log.defLogger.info("ping a heat beat...");
+                        }
+                    }));
 
-            }
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.barrage.message.handler;
 
+import com.barrage.boot.DouyuNettyClient;
 import com.barrage.message.DouyuJoinGroupMessage;
 import com.barrage.message.DouyuLoginMessage;
 import com.barrage.message.DouyuMessage;
@@ -10,11 +11,9 @@ import java.util.Objects;
 
 public class DouyuLoginMessageHandler implements IMessageHandler<DouyuMessage> {
 
-    private Listener listener;
 
     @Override
-    public boolean handle(Connection connection, DouyuMessage message, Listener listener) {
-        this.listener = listener;
+    public boolean handle(Connection connection, DouyuMessage message) {
 
         if(Objects.equals(message.getMessageType(),"loginres")) {
             //login success , join group
@@ -33,9 +32,10 @@ public class DouyuLoginMessageHandler implements IMessageHandler<DouyuMessage> {
                 .addListener((future -> {
                     if(future.isSuccess()) {
                         connection.refreshState(Connection.ConnectionState.JOINED);
-                        listener.onSuccess();
+                        connection.hearBeat();
+                        DouyuNettyClient.notifyLoginSuccess();
                     } else {
-                        listener.onFailure(null);
+                     //do nothing but wait lock time out
                     }
                 }));
 

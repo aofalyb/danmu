@@ -3,75 +3,56 @@ package com.barrage.boot;
 
 import com.barrage.message.DouyuLoginMessage;
 import com.barrage.netty.DouyuConnClientChannelHandler;
-import com.barrage.netty.Listener;
 import com.barrage.netty.NettyClientException;
 import io.netty.channel.*;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 
 public class DouyuNettyClient extends NettyClient {
 
     private String rid;
-    private Listener listener;
 
-    private volatile boolean loginSuccess = false;
-
+    private static CountDownLatch loginFuture = new CountDownLatch(1);
 
     public DouyuNettyClient(String rid) {
         this.rid = rid;
     }
 
-    interface LoginListener extends Listener {
+    public static void notifyLoginSuccess() {
 
+        loginFuture.countDown();
     }
+
 
     @Override
     public ChannelHandler getChannelHandler() {
-        return new DouyuConnClientChannelHandler(rid, new LoginListener() {
-            @Override
-            public void onSuccess(Object... args) {
-                if(listener != null) {
-                    listener.onSuccess(args);
-                    loginSuccess = true;
-                }
-            }
-
-            @Override
-            public void onFailure(Throwable cause) {
-                if(listener != null) {
-                    listener.onFailure(cause);
-                }
-            }
-        });
+        return new DouyuConnClientChannelHandler(rid);
     }
 
     @Override
-    public void login(Listener listener) {
+    public CountDownLatch login() throws NettyClientException {
 
-        this.listener = listener;
 
         try {
-            init(listener);
+            init();
             ChannelFuture connect = connect("openbarrage.douyutv.com", 8601);
             connect.get(DouyuLoginMessage.LOGIN_TIME_OUT, TimeUnit.MILLISECONDS);
             if(!connect.isSuccess()) {
-                listener.onFailure(null);
+                throw new NettyClientException("connect fail ,rid="+rid);
             }
 
             //超时检查
-            Thread.sleep(DouyuLoginMessage.LOGIN_TIME_OUT);
-            if(!loginSuccess) {
-                listener.onFailure(new NettyClientException("login time out ,rid="+rid));
+            if(!loginFuture.await(DouyuLoginMessage.LOGIN_TIME_OUT, TimeUnit.MILLISECONDS)) {
+                throw new NettyClientException("login time out ,rid="+rid);
             }
 
         } catch (Throwable throwable) {
-            listener.onFailure(throwable);
-            return;
+            throw new NettyClientException("login error ,rid="+rid,throwable);
+
         }
+        return loginFuture;
     }
 
 

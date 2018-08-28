@@ -1,6 +1,7 @@
 package com.barrage.boot;
 
 import com.barrage.netty.Listener;
+import com.barrage.netty.NettyClientException;
 import com.barrage.netty.codec.PacketDecoder;
 import com.barrage.netty.codec.PacketEncoder;
 import io.netty.bootstrap.Bootstrap;
@@ -15,18 +16,22 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 
 import java.net.InetSocketAddress;
 import java.nio.channels.spi.SelectorProvider;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
 
+/**
+ * netty client的定位是一个引导启动/停止的客户端，而{@link com.barrage.netty.Connection}
+ * 的定位是维持C/S的长连接。
+ */
 public abstract class NettyClient {
 
 
     private EventLoopGroup workerGroup;
     private Bootstrap bootstrap;
-    protected Listener listener;
 
 
-
-
-    private void createClient(Listener listener, EventLoopGroup workerGroup, ChannelFactory<? extends Channel> channelFactory) {
+    private void createClient(EventLoopGroup workerGroup, ChannelFactory<? extends Channel> channelFactory) {
         this.workerGroup = workerGroup;
         this.bootstrap = new Bootstrap();
         bootstrap.group(workerGroup)
@@ -40,7 +45,6 @@ public abstract class NettyClient {
             }
         });
         initOptions(bootstrap);
-        listener.onSuccess();
     }
 
     protected ChannelFuture connect(String host, int port) {
@@ -57,19 +61,19 @@ public abstract class NettyClient {
             }
         });
     }
-    private void createNioClient(Listener listener) {
+    private void createNioClient() {
         NioEventLoopGroup workerGroup = new NioEventLoopGroup(
                 getWorkThreadNum(), new DefaultThreadFactory("netty-tcp-client"), getSelectorProvider()
         );
         workerGroup.setIoRatio(getIoRate());
-        createClient(listener, workerGroup, getChannelFactory());
+        createClient(workerGroup, getChannelFactory());
     }
-    private void createEpollClient(Listener listener) {
+    private void createEpollClient() {
         EpollEventLoopGroup workerGroup = new EpollEventLoopGroup(
                 getWorkThreadNum(), new DefaultThreadFactory("netty-tcp-client")
         );
         workerGroup.setIoRatio(getIoRate());
-        createClient(listener, workerGroup, EpollSocketChannel::new);
+        createClient(workerGroup, EpollSocketChannel::new);
     }
 
     protected void initPipeline(ChannelPipeline pipeline) {
@@ -96,15 +100,14 @@ public abstract class NettyClient {
 
     public abstract ChannelHandler getChannelHandler();
 
-    public abstract void login(Listener listener);
+    public abstract CountDownLatch login() throws NettyClientException;
 
 
-    protected void init(Listener listener) throws Throwable {
-        this.listener = listener;
+    protected void init() throws Throwable {
         if (useNettyEpoll()) {
-            createEpollClient(listener);
+            createEpollClient();
         } else {
-            createNioClient(listener);
+            createNioClient();
         }
     }
 
@@ -121,11 +124,10 @@ public abstract class NettyClient {
     }
 
 
-    protected void doStop(Listener listener) throws Throwable {
+    public void doStop() throws Throwable {
         if (workerGroup != null) {
             workerGroup.shutdownGracefully();
         }
-        listener.onSuccess();
     }
 
     protected void initOptions(Bootstrap b) {

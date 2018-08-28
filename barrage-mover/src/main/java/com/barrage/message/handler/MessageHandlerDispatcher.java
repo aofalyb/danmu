@@ -32,31 +32,35 @@ public class MessageHandlerDispatcher {
 
                 handlerMap.put(singleKey,messageHandler);
             }
-
+        } else {
+            handlerMap.put(key,messageHandler);
 
         }
     }
 
 
     public IMessageHandler getHandler(String key) {
+        IMessageHandler iMessageHandler = handlerMap.get(key);
+        if(iMessageHandler == null) {
+            return handlerMap.get("def");
+        }
 
-        return handlerMap.get(key);
+        return iMessageHandler;
     }
 
 
-    public boolean dispatch(Message message ,Listener listener) {
+    public boolean dispatch(Message message) {
         Message decodeMessage = message.decode();
 
         IMessageHandler handler = getHandler(decodeMessage.getMessageType());
         if(handler == null) {
-            //throw new MessageHandleRuntimeException("can`t find any handler match key "+message.getMessageType()+".");
-            return false;
+            throw new MessageHandleRuntimeException("can`t find any handler match key "+message.getMessageType()+".");
         }
         //TODO 这里需要细化到具体的message类型
 
 
 
-        return handler.handle(connection,decodeMessage,listener);
+        return handler.handle(connection,decodeMessage);
     }
 
 

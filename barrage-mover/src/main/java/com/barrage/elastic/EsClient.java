@@ -111,7 +111,7 @@ public class EsClient {
                         .field("uid", uid)
                         .field("nn", nn)
                         .field("text", text)
-                        .endObject()).setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE).get();
+                        .endObject()).get();
 
 
 
