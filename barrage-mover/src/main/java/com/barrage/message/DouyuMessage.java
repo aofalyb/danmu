@@ -36,8 +36,8 @@ public class DouyuMessage extends BaseMessage <DouyuPacket> {
             } catch (UnsupportedEncodingException e) {
                 Log.errorLogger.error(e);
             }
-
-            Log.defLogger.info("#["+System.currentTimeMillis()+"]"+originMsg);
+            System.out.println(originMsg);
+            //Log.defLogger.info("#["+System.currentTimeMillis()+"]"+originMsg);
         }
 
         return this;

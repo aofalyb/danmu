@@ -9,6 +9,9 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest;
@@ -23,6 +26,7 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
 import java.net.InetAddress;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class EsClient {
 
@@ -101,25 +105,40 @@ public class EsClient {
         System.out.println(_e - _s);
     }
 
+    private volatile static int _BATCH_LEN = 50;
+    private AtomicInteger CURSOR = new AtomicInteger(0);
+    private volatile BulkRequestBuilder bulkRequestBuilder;
 
     public boolean insert(String uid,String nn,String text) throws Exception {
 
         long _s = System.currentTimeMillis();
 
-        IndexResponse response = client.prepareIndex(INDEX_NAME, TYPE_NAME)
+        IndexRequestBuilder indexRequestBuilder = client.prepareIndex(INDEX_NAME, TYPE_NAME)
                 .setSource(XContentFactory.jsonBuilder().startObject()
                         .field("uid", uid)
                         .field("nn", nn)
                         .field("text", text)
-                        .endObject()).get();
+                        .endObject());
 
+        if(bulkRequestBuilder == null) {
+            bulkRequestBuilder = client.prepareBulk();
+        }
+
+        if(CURSOR.get() < _BATCH_LEN) {
+            bulkRequestBuilder.add(indexRequestBuilder.request());
+            CURSOR.incrementAndGet();
+            return true;
+        }
+
+        BulkResponse bulkItemResponses = bulkRequestBuilder.get();
+        bulkRequestBuilder = null;
+        CURSOR.set(0);
 
 
         long _e = System.currentTimeMillis();
-        System.out.println("insert cost time="+(_e - _s)+"ms, result="+(response.getResult() == DocWriteResponse.Result.CREATED)+".");
-        System.out.println(response);
+        System.out.println("insert cost time="+(_e - _s)+"ms, result="+bulkItemResponses.hasFailures()+".");
 
-        return response.getResult() == DocWriteResponse.Result.CREATED;
+        return bulkItemResponses.hasFailures();
     }
 
 

@@ -91,7 +91,7 @@ public abstract class NettyClient {
     }
 
     protected int getIoRate() {
-        return 10;
+        return 2;
     }
 
     protected int getWorkThreadNum() {
