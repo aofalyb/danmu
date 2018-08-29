@@ -9,6 +9,7 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
@@ -26,6 +27,11 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
 import java.net.InetAddress;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class EsClient {
@@ -37,6 +43,16 @@ public class EsClient {
     private static TransportClient client;
 
     private static Object lock = new Object();
+
+    private static BlockingDeque<BulkResponse> waitCheckQueue = new LinkedBlockingDeque<>();
+
+    static {
+
+        //用一个线程轮训检查是否有错误的写入
+        CheckBulkResponseFailThread checkWriteFailThread = new CheckBulkResponseFailThread("check-es-write-fail");
+        checkWriteFailThread.setDaemon(true);
+        checkWriteFailThread.start();
+    }
 
 
 
@@ -105,11 +121,15 @@ public class EsClient {
         System.out.println(_e - _s);
     }
 
-    private volatile static int _BATCH_LEN = 50;
+    private volatile static int _BATCH_LEN = 1000;
     private AtomicInteger CURSOR = new AtomicInteger(0);
     private volatile BulkRequestBuilder bulkRequestBuilder;
 
-    public boolean insert(String uid,String nn,String text) throws Exception {
+
+    /**
+     * 这一段代码多线程环境下会报错，所以加了同步锁，我也不知道原因
+     */
+    public synchronized boolean insert(String uid,String nn,String text) throws Exception {
 
         long _s = System.currentTimeMillis();
 
@@ -131,6 +151,7 @@ public class EsClient {
         }
 
         BulkResponse bulkItemResponses = bulkRequestBuilder.get();
+        waitCheckQueue.add(bulkItemResponses);
         bulkRequestBuilder = null;
         CURSOR.set(0);
 
@@ -139,6 +160,34 @@ public class EsClient {
         System.out.println("insert cost time="+(_e - _s)+"ms, result="+bulkItemResponses.hasFailures()+".");
 
         return bulkItemResponses.hasFailures();
+    }
+
+    private static class CheckBulkResponseFailThread extends Thread {
+
+        public CheckBulkResponseFailThread(String name) {
+            super(name);
+        }
+
+        @Override
+        public void run() {
+
+            BulkResponse bulkResponse = null;
+            try {
+                while ((bulkResponse = waitCheckQueue.take()) != null) {
+                        if(bulkResponse.hasFailures()) {
+                            Iterator<BulkItemResponse> iterator = bulkResponse.iterator();
+                            while (iterator.hasNext()) {
+                                BulkItemResponse bulkItemResponse = iterator.next();
+                                Log.errorLogger.error("#["+System.currentTimeMillis()+"]"+"["+bulkItemResponse+"]");
+                            }
+
+                        }
+                }
+            } catch (InterruptedException e) {
+                Log.errorLogger.error("waitCheckQueue take error.",e);
+            }
+
+        }
     }
 
 

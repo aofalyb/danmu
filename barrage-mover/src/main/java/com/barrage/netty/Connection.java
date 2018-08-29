@@ -146,7 +146,6 @@ public class Connection {
                     .addListener((future -> {
                         if(future.isSuccess()) {
                             refreshHeartBeat();
-                            Log.defLogger.info("ping a heat beat...");
                         }
                     }));
 
