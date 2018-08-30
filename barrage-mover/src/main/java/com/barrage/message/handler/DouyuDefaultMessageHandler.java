@@ -4,7 +4,6 @@ import com.barrage.common.Log;
 import com.barrage.common.NamedPoolThreadFactory;
 import com.barrage.elastic.EsClient;
 import com.barrage.message.DouyuMessage;
-import com.barrage.message.Message;
 import com.barrage.netty.Connection;
 
 import java.util.Map;
@@ -20,6 +19,7 @@ public class DouyuDefaultMessageHandler implements IMessageHandler<DouyuMessage>
 
     private static final int THREAD_COUNT = 1;
     private static LinkedBlockingQueue insertQueue = new LinkedBlockingQueue<Runnable>();
+    //用线程池的想法是：线程池是天然的缓冲区，insert本身是阻塞的，可以缓冲写入。
     private static final Executor threadPool =  new ThreadPoolExecutor(THREAD_COUNT, THREAD_COUNT,
                                       0L,TimeUnit.MILLISECONDS,
             insertQueue,new NamedPoolThreadFactory("es_write"));
@@ -33,17 +33,17 @@ public class DouyuDefaultMessageHandler implements IMessageHandler<DouyuMessage>
         String txt = attributes.get("txt");
         String uid = attributes.get("uid");
 
-        threadPool.execute(new EsInsertClass(nn,txt,uid));
+        threadPool.execute(new EsInsertTask(nn,txt,uid));
 
         return false;
     }
 
 
-    private class EsInsertClass implements Runnable {
+    private class EsInsertTask implements Runnable {
 
         String nn,txt,uid;
 
-        public EsInsertClass(String nn, String txt, String uid) {
+        public EsInsertTask(String nn, String txt, String uid) {
             this.nn = nn;
             this.txt = txt;
             this.uid = uid;

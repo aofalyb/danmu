@@ -20,8 +20,8 @@ public class DouyuNettyClient extends NettyClient {
         this.rid = rid;
     }
 
+    //接收login success的回调(重连也会调用)
     public static void notifyLoginSuccess() {
-
         loginFuture.countDown();
     }
 

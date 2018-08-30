@@ -100,6 +100,10 @@ public abstract class NettyClient {
 
     public abstract ChannelHandler getChannelHandler();
 
+    /**
+     * sync login
+     * @throws NettyClientException
+     */
     public abstract CountDownLatch login() throws NettyClientException;
 
 

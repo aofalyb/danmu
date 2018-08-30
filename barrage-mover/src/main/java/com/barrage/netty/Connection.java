@@ -1,6 +1,7 @@
 package com.barrage.netty;
 
 import com.barrage.message.DouyuHeartbeatMessage;
+import com.barrage.message.DouyuLoginMessage;
 import com.barrage.protocol.Packet;
 import com.barrage.common.Log;
 import io.netty.channel.Channel;
@@ -10,6 +11,8 @@ import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * @author liyang
@@ -17,6 +20,8 @@ import java.util.concurrent.TimeUnit;
  * @date 2018/3/19
  */
 public class Connection {
+
+
     /**
      * new 新建
      * LOGIN_PRE 已发送登录消息但未收到响应
@@ -48,6 +53,7 @@ public class Connection {
     }
 
     public static final long HEATBEAT_TIME_OUT = 40 * 1000;
+
     private Channel channel;
     private volatile long lastReadTime = -1;
     private volatile long lastHeartBeatTime = -1;
@@ -97,6 +103,28 @@ public class Connection {
 
     public boolean heatTimeout() {
         return (System.currentTimeMillis() - lastHeartBeatTime) > HEATBEAT_TIME_OUT;
+    }
+
+
+    /**
+     * reconnect util login success again
+     */
+    public void reConnect(Consumer<Connection> login) {
+
+        Thread reConnectThread = new Thread(() -> {
+            int times = 0;
+            while (state != ConnectionState.JOINED) {
+                login.accept(this);
+                Log.errorLogger.error("reconnect login, times = "+ ++times + "...");
+                try {
+                    Thread.sleep(DouyuLoginMessage.LOGIN_TIME_OUT);
+                } catch (InterruptedException e) {
+                   Log.errorLogger.error("reconnect-thread",e);
+                }
+            }
+        });
+        reConnectThread.setName("reconnect-thread");
+        reConnectThread.start();
     }
 
 
@@ -151,4 +179,7 @@ public class Connection {
 
         }
     }
+
+
+
 }

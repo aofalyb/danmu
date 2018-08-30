@@ -2,18 +2,22 @@ package com.barrage.elastic;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 
-public class EsWriteBuffer<T> {
+public class EsWriteBuffer {
 
     public static final int DEFAULT_BUFFER_LENGTH = 1000;
-    private List<EsWriteObject> buffered  = null;
+    private BlockingQueue<EsWriteObject> buffered  = null;
 
 
     private int bufferLen = DEFAULT_BUFFER_LENGTH;
 
     public EsWriteBuffer(int bufferLen) {
         this.bufferLen = bufferLen;
-        buffered = new ArrayList<>(bufferLen);
+        buffered = new LinkedBlockingQueue<>(bufferLen);
     }
 
     /**
@@ -29,7 +33,7 @@ public class EsWriteBuffer<T> {
         }
     }
 
-    public List<EsWriteObject> get() {
+    public BlockingQueue<EsWriteObject> get() {
         return buffered;
     }
 

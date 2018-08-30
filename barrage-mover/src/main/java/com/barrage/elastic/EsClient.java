@@ -30,6 +30,7 @@ import java.net.InetAddress;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -44,7 +45,7 @@ public class EsClient {
 
     private static Object lock = new Object();
 
-    private static BlockingDeque<BulkResponse> waitCheckQueue = new LinkedBlockingDeque<>();
+    private static BlockingQueue<BulkResponse> waitCheckQueue = new LinkedBlockingQueue<>();
 
     static {
 
@@ -122,14 +123,14 @@ public class EsClient {
     }
 
     private volatile static int _BATCH_LEN = 1000;
-    private AtomicInteger CURSOR = new AtomicInteger(0);
+    private volatile int CURSOR = 0;
     private volatile BulkRequestBuilder bulkRequestBuilder;
 
-
     /**
-     * 这一段代码多线程环境下会报错，所以加了同步锁，我也不知道原因
+     * 这一段代码多线程环境下会报错，所以加了同步锁（原因抽时间再查）。
+     *
      */
-    public synchronized boolean insert(String uid,String nn,String text) throws Exception {
+    public synchronized void insert(String uid,String nn,String text) throws Exception {
 
         long _s = System.currentTimeMillis();
 
@@ -144,22 +145,22 @@ public class EsClient {
             bulkRequestBuilder = client.prepareBulk();
         }
 
-        if(CURSOR.get() < _BATCH_LEN) {
+        //批量写入，不知道es有没有带buffer类，没有的话，考虑自己实现一个
+        //这里用游标实现了一个非常简单的buffer
+        if(CURSOR < _BATCH_LEN) {
             bulkRequestBuilder.add(indexRequestBuilder.request());
-            CURSOR.incrementAndGet();
-            return true;
+            ++CURSOR;
+            return;
         }
 
         BulkResponse bulkItemResponses = bulkRequestBuilder.get();
-        waitCheckQueue.add(bulkItemResponses);
+        waitCheckQueue.put(bulkItemResponses);
         bulkRequestBuilder = null;
-        CURSOR.set(0);
+        CURSOR = 0;
 
 
         long _e = System.currentTimeMillis();
         System.out.println("insert cost time="+(_e - _s)+"ms, result="+bulkItemResponses.hasFailures()+".");
-
-        return bulkItemResponses.hasFailures();
     }
 
     private static class CheckBulkResponseFailThread extends Thread {

@@ -76,6 +76,7 @@ public class DouyuConnClientChannelHandler extends ChannelInboundHandlerAdapter 
         connection.refreshState(Connection.ConnectionState.INACTIVE);
         Log.errorLogger.error("client {} offline. try reconnect...",RID);
         Log.errorLogger.error("ctx : {} ",ctx);
+        connection.reConnect(this::doLogin);
 
     }
 
