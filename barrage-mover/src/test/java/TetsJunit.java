@@ -1,6 +1,7 @@
 import com.alibaba.fastjson.JSON;
 import com.barrage.common.Log;
 import com.barrage.message.DouyuSerializeUtil;
+import com.barrage.netty.Connection;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
@@ -55,18 +56,13 @@ public class TetsJunit {
 //            e.printStackTrace();
 //        }
 
-        boolean await = false;
-        try {
-            ReentrantLock reentrantLock = new ReentrantLock();
-            Condition condition = reentrantLock.newCondition();
-            reentrantLock.lock();
-            await = condition.await(5, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        Connection connection = new Connection(null,"520");
 
-        System.out.println(await);
+        connection.reConnect(connection1 -> login(connection));
 
+    }
+
+    public static void login(Connection connection) {
 
     }
 }

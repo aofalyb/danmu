@@ -114,11 +114,10 @@ public class Connection {
         Thread reConnectThread = new Thread(() -> {
             int times = 0;
             while (state != ConnectionState.JOINED) {
-                login.accept(this);
-                Log.errorLogger.error("reconnect login, times = "+ ++times + "...");
+                Log.errorLogger.error("reconnect rid={} , times = {}.",rid,++times);
                 try {
-                    Thread.sleep(DouyuLoginMessage.LOGIN_TIME_OUT);
-                } catch (InterruptedException e) {
+                    login.accept(this);
+                } catch (Exception e) {
                    Log.errorLogger.error("reconnect-thread",e);
                 }
             }
