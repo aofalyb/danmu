@@ -105,25 +105,29 @@ public class Connection {
         return (System.currentTimeMillis() - lastHeartBeatTime) > HEATBEAT_TIME_OUT;
     }
 
+    public void close() {
+        channel.close();
+    }
+
 
     /**
      * reconnect util login success again
      */
     public void reConnect(Consumer<Connection> login) {
 
-        Thread reConnectThread = new Thread(() -> {
-            int times = 0;
-            while (state != ConnectionState.JOINED) {
-                Log.errorLogger.error("reconnect rid={} , times = {}.",rid,++times);
-                try {
-                    login.accept(this);
-                } catch (Exception e) {
-                   Log.errorLogger.error("reconnect-thread",e);
-                }
-            }
-        });
-        reConnectThread.setName("reconnect-thread");
-        reConnectThread.start();
+//        Thread reConnectThread = new Thread(() -> {
+//            int times = 0;
+//            while (state != ConnectionState.JOINED) {
+//                Log.errorLogger.error("reconnect rid={} , times = {}.",rid,++times);
+//                try {
+//                    login.accept(this);
+//                } catch (Exception e) {
+//                   Log.errorLogger.error("reconnect-thread",e);
+//                }
+//            }
+//        });
+//        reConnectThread.setName("reconnect-thread");
+//        reConnectThread.start();
     }
 
 
@@ -179,6 +183,7 @@ public class Connection {
         }
     }
 
-
-
+    public ConnectionState getState() {
+        return state;
+    }
 }

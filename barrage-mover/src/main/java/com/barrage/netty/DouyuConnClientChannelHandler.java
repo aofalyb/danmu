@@ -1,5 +1,6 @@
 package com.barrage.netty;
 
+import com.barrage.boot.NettyClient;
 import com.barrage.common.Constants;
 import com.barrage.common.Log;
 import com.barrage.message.DouyuLoginMessage;
@@ -8,12 +9,13 @@ import com.barrage.message.handler.DouyuDefaultMessageHandler;
 import com.barrage.message.handler.DouyuLoginMessageHandler;
 import com.barrage.message.handler.MessageHandlerDispatcher;
 import com.barrage.protocol.DouyuPacket;
+import com.barrage.util.ClientManager;
 import io.netty.channel.*;
 
 
 /**
  * @author liyang
- * @description:
+ * @description: 430489 276685 606118 99999 520 88188 5221750 911 71017 688
  * @date 2018/4/3
  */
 @ChannelHandler.Sharable
@@ -42,7 +44,9 @@ public class DouyuConnClientChannelHandler extends ChannelInboundHandlerAdapter 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
 
-        connection = new Connection(ctx.channel(),RID);
+        if(connection == null) {
+            connection = new Connection(ctx.channel(),RID);
+        }
         //init handler
         messageHandlerDispatcher = new MessageHandlerDispatcher(connection);
         messageHandlerDispatcher.register("loginres|loginreq",new DouyuLoginMessageHandler());
@@ -76,7 +80,10 @@ public class DouyuConnClientChannelHandler extends ChannelInboundHandlerAdapter 
         connection.refreshState(Connection.ConnectionState.INACTIVE);
         Log.errorLogger.error("client {} offline. try reconnect...",RID);
         Log.errorLogger.error("ctx : {} ",ctx);
-        connection.reConnect(this::doLogin);
+
+        NettyClient nettyClient = ClientManager.get(RID);
+        nettyClient.reLogin(connection);
+
 
     }
 

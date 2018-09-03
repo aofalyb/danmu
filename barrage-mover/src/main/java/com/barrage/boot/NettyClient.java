@@ -1,5 +1,6 @@
 package com.barrage.boot;
 
+import com.barrage.netty.Connection;
 import com.barrage.netty.Listener;
 import com.barrage.netty.NettyClientException;
 import com.barrage.netty.codec.PacketDecoder;
@@ -105,6 +106,8 @@ public abstract class NettyClient {
      * @throws NettyClientException
      */
     public abstract CountDownLatch login() throws NettyClientException;
+
+    public abstract void reLogin(Connection connection);
 
 
     protected void init() throws Throwable {

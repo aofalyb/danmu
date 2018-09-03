@@ -25,6 +25,10 @@ public class ClientManager {
 
     }
 
+    public static NettyClient get(String roomId) {
+        return clientPool.get(roomId);
+    }
+
     public static void closeAll() {
 
         Set<String> keySet = clientPool.keySet();

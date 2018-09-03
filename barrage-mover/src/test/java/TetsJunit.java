@@ -58,7 +58,6 @@ public class TetsJunit {
 
         Connection connection = new Connection(null,"520");
 
-        connection.reConnect(connection1 -> login(connection));
 
     }
 

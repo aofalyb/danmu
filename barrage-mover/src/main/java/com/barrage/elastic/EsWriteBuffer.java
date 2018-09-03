@@ -25,7 +25,7 @@ public class EsWriteBuffer {
      * @param t
      * @return true if cached
      */
-    public synchronized boolean cache(EsWriteObject t) {
+    public boolean cache(EsWriteObject t) {
         if(buffered.size() < DEFAULT_BUFFER_LENGTH) {
             return buffered.add(t);
         } else {

@@ -122,7 +122,7 @@ public class EsClient {
         System.out.println(_e - _s);
     }
 
-    private volatile static int _BATCH_LEN = 1000;
+    private volatile static int _BATCH_LEN = 100;
     private volatile int CURSOR = 0;
     private volatile BulkRequestBuilder bulkRequestBuilder;
 
