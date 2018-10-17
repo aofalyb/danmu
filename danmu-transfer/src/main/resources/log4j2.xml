@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+
+    <Properties>
+        <!-- 是否打印所在的行号(对性能影响比较大) -->
+        <property name="enable_log_location">true</property>
+        <!-- 单次写入日志文件的块大(byte) -->
+        <property name="buffer_size">1048576</property>
+        <!-- 应用名 -->
+        <property name="logstack.application.name">demo</property>
+        <property name="logstack.client.id">log4j2-json</property>
+        <property name="vmid">server</property>
+        <!-- 日志输出目录 -->
+        <property name="LOG_HOME">logs/${logstack.application.name}-${logstack.client.id}</property>
+
+        <property name="default_pattern">
+            <![CDATA[ [%d{yyyy-MM-dd HH:mm:ss:SSS}] [%-5level] [default] [${logstack.application.name}] [${logstack.client.id}] [%MDC{trace.id}] [%MDC{log.correlation.id}] [%t] [%C{1}:%L] %msg%n ]]>
+        </property>
+
+        <property name="busi_pattern">
+            <![CDATA[ [%d{yyyy-MM-dd HH:mm:ss:SSS}] [%-5level] [busi] [${logstack.application.name}] [${logstack.client.id}] [%MDC{trace.id}] [%MDC{log.correlation.id}] [%t] [%C{1}:%L] %msg%n ]]>
+        </property>
+
+        <property name="boot_pattern">
+            <![CDATA[ [%d{yyyy-MM-dd HH:mm:ss:SSS}] [%-5level] [boot] [${logstack.application.name}] [${logstack.client.id}] [%MDC{trace.id}] [%MDC{log.correlation.id}] [%t] [%C{1}:%L] %msg%n ]]>
+        </property>
+
+        <property name="sys_pattern">
+            <![CDATA[ [%d{yyyy-MM-dd HH:mm:ss:SSS}] [%-5level] [sys] [${logstack.application.name}] [${logstack.client.id}] [%MDC{trace.id}] [%MDC{log.correlation.id}] [%t] [%C{1}:%L] %msg%n ]]>
+        </property>
+
+        <property name="trace_pattern">
+            <![CDATA[ [%d{yyyy-MM-dd HH:mm:ss:SSS}] [${logstack.application.name}] [%MDC{trace.id}] [%MDC{log.correlation.id}] [%MDC{span.operation.name}] [%MDC{span.id}] [%MDC{parent.span.id}] [%MDC{span.cost}] [%MDC{span.status}] %msg%n ]]>
+        </property>
+
+        <property name="metrics_pattern">
+            <![CDATA[ [%d{yyyy-MM-dd HH:mm:ss:SSS}] [${logstack.application.name}] [%MDC{metric.name}] [%MDC{metric.type}] [%MDC{metric.value}] [%MDC{metric.extension}] %msg%n ]]>
+        </property>
+    </Properties>
+
+    <Appenders>
+        <RollingFile name="default" fileName="${LOG_HOME}/${logstack.application.name}_${vmid}_default.log"
+                     filePattern="${LOG_HOME}/${logstack.application.name}_${vmid}_default_%d{yyyy-MM-dd}_%i.log"
+                     immediateFlush="false" bufferSize="${buffer_size}">
+
+            <!--以JSON格式输出日志，compact：压缩json字符串（去除所有空格和换行，可读性差，节约空间），eventEol：是否在每条记录结尾增加end-of-line（换行）,
+                同时设置为true，保证每条记录独占一行。更多参数设置，参考log4j官方文档：http://logging.apache.org/log4j/2.x/manual/layouts.html#JSONLayout-->
+            <JsonLayout charset="UTF-8" complete="false" compact="false" eventEol="true" properties="true" propertiesAsList="true" includeStacktrace="true"
+                        stacktraceAsString="true"   includeNullDelimiter="true" objectMessageAsJsonObject="true">
+                <KeyValuePair key="timestamp" value="$${date:yyyy-MM-dd HH:mm:ss,SSS}" />
+            </JsonLayout>
+
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="60MB"/>
+            </Policies>
+            <DefaultRolloverStrategy min="1" max="999"/>
+        </RollingFile>
+
+
+        <Console name="Console" target="SYSTEM_OUT">
+            <!--控制台打印使用默认打印格式，保证良好的阅读性-->
+            <PatternLayout pattern="${default_pattern}"/>
+        </Console>
+    </Appenders>
+
+    <loggers>
+        <!-- 默认日志打印文件 -->
+        <Root level="INFO" additivity="false" includeLocation="${enable_log_location}">
+            <AppenderRef ref="default"/>
+        </Root>
+    </loggers>
+
+
+</Configuration>
